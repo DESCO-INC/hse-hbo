@@ -1,0 +1,645 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Carbon\Carbon;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Shared\Date;
+
+use App\Models\HboList;
+use App\Models\User;
+
+class HboListController extends Controller
+{
+    public function index()
+    {
+        return view('hbo.index');
+    }
+
+    public function business_unit()
+    {
+        $business_units = HboList::select('business_unit')->distinct()->pluck('business_unit');
+
+        return response()->json($business_units);
+    }
+
+    public function company($business_unit)
+    {
+        $company = HboList::where('business_unit', $business_unit)->distinct()->pluck('company');
+
+        return response()->json($company);
+    }
+
+    public function statuses()
+    {
+        $status = HboList::select('status')->distinct()->pluck('status');
+
+        return response()->json($status);
+    }
+
+    public function list(Request $request)
+    {
+        $query = HboList::query();
+
+        // Apply filters
+        if ($request->filled('business_unit') && strtolower($request->business_unit) !== 'all') {
+            $query->where('business_unit', $request->business_unit);
+        }
+
+        if ($request->filled('status') && strtolower($request->status) !== 'all') {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('company') && strtolower($request->company) !== 'all') {
+            $query->where('company', $request->company);
+        }
+
+        if ($request->filled('date_from') && $request->filled('date_to')) {
+            $query->whereBetween('date_raised', [$request->date_from, $request->date_to]);
+        } elseif ($request->filled('date_from')) {
+            $query->whereDate('date_raised', '>=', $request->date_from);
+        } elseif ($request->filled('date_to')) {
+            $query->whereDate('date_raised', '<=', $request->date_to);
+        }
+
+        // Paginate results, 10 per page
+        $hboList = $query->orderBy('id', 'desc')->paginate(10);
+
+        // Keep query parameters in pagination links
+        $hboList->appends($request->all());
+
+        return view('hbo.list', compact('hboList'));
+    }
+
+    public function create()
+    {
+        $typesData = json_decode(file_get_contents(resource_path('json/types.json')), true);
+        $types = $typesData['Types'] ?? [];
+        $categoriesData = json_decode(file_get_contents(resource_path('json/categories.json')), true);
+        $swa_sro = json_decode(file_get_contents(resource_path('json/swa_sro.json')), true);
+
+        return view('hbo.create', [
+            'types' => $types,
+            'categories' => $categoriesData,
+            'swa_sro' => $swa_sro,
+            'users' => User::all(),
+        ]);
+    }
+
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'business_unit' => 'required',
+            'company' => 'required',
+            'type' => 'required',
+            'category' => 'required',
+            'sub_category' => 'required',
+            'date_raised' => 'required|date',
+            'date_due' => 'required|date|after_or_equal:date_raised',
+            'SWA' => 'required',
+            'SRO' => 'required',
+            'reported_by' => 'required',
+            'reported_to' => 'required',
+            'hazard_description' => 'required',
+            'recommendation' => 'required',
+        ]);
+
+        \App\Models\HboList::create(
+            array_merge($data, [
+                'status' => 'ONGOING',
+                'created_by' => Auth::user()->name,
+            ]),
+        );
+
+        return redirect()->route('hbo.list')->with('success', 'Hazard record created successfully.');
+    }
+
+    public function edit(HboList $hbo)
+    {
+        // Load and decode types.json
+        $typesData = json_decode(file_get_contents(resource_path('json/types.json')), true);
+        $types = $typesData['Types'] ?? [];
+        // Load and decode categories.json
+        $categoriesData = json_decode(file_get_contents(resource_path('json/categories.json')), true);
+        $swa_sro = json_decode(file_get_contents(resource_path('json/swa_sro.json')), true);
+
+        return view('hbo.edit', [
+            'hbo' => $hbo,
+            'types' => $types,
+            'categories' => $categoriesData,
+            'swa_sro' => $swa_sro,
+        ]);
+    }
+
+    public function getDataCounts(Request $request)
+    {
+        $query = HboList::query();
+        if ($request->filled('business_unit') && strtolower($request->business_unit) !== 'all') {
+            $query->where('business_unit', $request->business_unit);
+        }
+
+        if ($request->filled('company') && strtolower($request->company) !== 'all') {
+            $query->where('company', $request->company);
+        }
+        if ($request->filled('date_from') && $request->filled('date_to')) {
+            $query->whereBetween('date_raised', [$request->date_from, $request->date_to]);
+        } elseif ($request->filled('date_from')) {
+            $query->whereDate('date_raised', '>=', $request->date_from);
+        } elseif ($request->filled('date_to')) {
+            $query->whereDate('date_raised', '<=', $request->date_to);
+        }
+
+        // ✅ Order by custom status and latest date
+        $query
+            ->orderByRaw(
+                "
+            CASE
+                WHEN status = 'ONGOING' THEN 1
+                WHEN status = 'FOR VERIFICATION' THEN 2
+                WHEN status = 'CLOSE' THEN 3
+                ELSE 4
+            END
+        ",
+            )
+            ->orderBy('date_raised', 'desc');
+
+        // ✅ Clone for counts
+        $countQuery = clone $query;
+
+        $counts = [
+            'total' => $countQuery->count(),
+            'ongoing' => (clone $countQuery)->where('status', 'ONGOING')->count(),
+            'for_verification' => (clone $countQuery)->where('status', 'FOR VERIFICATION')->count(),
+            'closed' => (clone $countQuery)->where('status', 'CLOSE')->count(),
+        ];
+
+        return response()->json($counts);
+    }
+
+    public function getFilteredData(Request $request)
+    {
+        // Build base filtered query
+        $baseQuery = HboList::query();
+
+        if ($request->filled('business_unit') && strtolower($request->business_unit) !== 'all') {
+            $baseQuery->where('business_unit', $request->business_unit);
+        }
+
+        if ($request->filled('company') && strtolower($request->company) !== 'all') {
+            $baseQuery->where('company', $request->company);
+        }
+
+        if ($request->filled('date_from') && $request->filled('date_to')) {
+            $baseQuery->whereBetween('date_raised', [$request->date_from, $request->date_to]);
+        }
+
+        // ---------------------------------------------------------------
+        // ⭐ START WEEKLY SUMMARY BASED ON date_to
+        // ---------------------------------------------------------------
+
+        // If no date_to, default to today
+        $anchorDate = $request->filled('date_to') ? Carbon::parse($request->date_to) : Carbon::today();
+
+        // Start on Monday of anchor week
+        $thisWeekStart = $anchorDate->copy()->startOfWeek(Carbon::MONDAY);
+        $thisWeekEnd = $anchorDate->copy()->endOfWeek(Carbon::SUNDAY);
+
+        $weeks = [
+            'two_weeks' => [
+                'start' => $thisWeekStart->copy()->subWeeks(2),
+                'end' => $thisWeekEnd->copy()->subWeeks(2),
+            ],
+            'last_week' => [
+                'start' => $thisWeekStart->copy()->subWeek(),
+                'end' => $thisWeekEnd->copy()->subWeek(),
+            ],
+            'this_week' => [
+                'start' => $thisWeekStart,
+                'end' => $thisWeekEnd,
+            ],
+        ];
+
+        $driver = DB::getDriverName();
+        $dayFunction =
+            $driver === 'sqlite'
+                ? "CAST(strftime('%w', date_raised) AS INTEGER)" // 0=Sun
+                : 'DAYOFWEEK(date_raised)'; // 1=Sun
+
+        $weeklySummary = [];
+
+        foreach ($weeks as $label => $range) {
+            $q = clone $baseQuery;
+
+            $records = $q
+                ->select(DB::raw("$dayFunction AS weekday"), DB::raw('COUNT(*) AS count'))
+                ->whereDate('date_raised', '>=', $range['start']->toDateString())
+                ->whereDate('date_raised', '<=', $range['end']->toDateString())
+                ->groupBy('weekday')
+                ->get()
+                ->pluck('count', 'weekday')
+                ->toArray();
+
+            // Normalize weekday array
+            if ($driver === 'sqlite') {
+                $sun = $records[0] ?? 0;
+                $mon = $records[1] ?? 0;
+                $tue = $records[2] ?? 0;
+                $wed = $records[3] ?? 0;
+                $thu = $records[4] ?? 0;
+                $fri = $records[5] ?? 0;
+                $sat = $records[6] ?? 0;
+            } else {
+                $sun = $records[1] ?? 0;
+                $mon = $records[2] ?? 0;
+                $tue = $records[3] ?? 0;
+                $wed = $records[4] ?? 0;
+                $thu = $records[5] ?? 0;
+                $fri = $records[6] ?? 0;
+                $sat = $records[7] ?? 0;
+            }
+
+            $weeklySummary[] = [
+                'week_label' => $label,
+                'date_from' => $range['start']->format('m/d/Y'),
+                'date_to' => $range['end']->format('m/d/Y'),
+                'mon' => $mon,
+                'tue' => $tue,
+                'wed' => $wed,
+                'thu' => $thu,
+                'fri' => $fri,
+                'sat' => $sat,
+                'sun' => $sun,
+                'total' => $mon + $tue + $wed + $thu + $fri + $sat + $sun,
+            ];
+        }
+
+        return response()->json([
+            'weekly_summary' => $weeklySummary,
+        ]);
+    }
+
+    public function getChartData(Request $request)
+    {
+        $query = HboList::query();
+
+        // ✅ Apply filters
+        if ($request->filled('business_unit') && strtolower($request->business_unit) !== 'all') {
+            $query->where('business_unit', $request->business_unit);
+        }
+        if ($request->filled('company') && strtolower($request->company) !== 'all') {
+            $query->where('company', $request->company);
+        }
+        if ($request->filled('date_from') && $request->filled('date_to')) {
+            $query->whereBetween('date_raised', [$request->date_from, $request->date_to]);
+        } elseif ($request->filled('date_from')) {
+            $query->whereDate('date_raised', '>=', $request->date_from);
+        } elseif ($request->filled('date_to')) {
+            $query->whereDate('date_raised', '<=', $request->date_to);
+        }
+
+        // ✅ Detect database connection type
+        $connection = config('database.default');
+
+        if ($connection === 'sqlite') {
+            // SQLite uses strftime('%Y-%m', column)
+            $monthExpr = "strftime('%Y-%m', date_raised)";
+        } else {
+            // MySQL uses DATE_FORMAT(column, '%Y-%m')
+            $monthExpr = "DATE_FORMAT(date_raised, '%Y-%m')";
+        }
+
+        // ✅ Detect database connection type (for date formatting)
+        $connection = config('database.default');
+        $monthExpr = $connection === 'sqlite' ? "strftime('%Y-%m', date_raised)" : "DATE_FORMAT(date_raised, '%Y-%m')";
+
+        // ✅ 1. Group by month (for line chart)
+        $byDate = (clone $query)
+            ->selectRaw("{$monthExpr} as month, COUNT(*) as total")
+            ->groupBy('month')
+            ->orderBy('month', 'asc')
+            ->get();
+
+        // ✅ 2. Group by category (for bar chart)
+        $byCategory = (clone $query)->selectRaw('category, COUNT(*) as total')->groupBy('category')->orderBy('total', 'desc')->get();
+
+        // ✅ 3. Group by company (for new chart)
+        $byCompany = (clone $query)->selectRaw('company, COUNT(*) as total')->groupBy('company')->orderBy('total', 'desc')->get();
+
+        // ✅ New: Group by Type
+        $byType = (clone $query)->selectRaw('type, COUNT(*) as total')->groupBy('type')->orderBy('total', 'desc')->get();
+
+        // ✅ Group by sub-category
+        $bySubcategory = (clone $query)->selectRaw('sub_category, COUNT(*) as total')->groupBy('sub_category')->orderBy('total', 'desc')->get();
+
+        if ($connection === 'sqlite') {
+            // SQLite version (approximation, not as precise)
+            $byWeekly = (clone $query)
+                ->selectRaw("strftime('%W', date_raised) as workweek, MIN(date_raised) as min_date, COUNT(*) as total")
+                ->groupBy('workweek')
+                ->orderBy('workweek', 'asc')
+                ->get()
+                ->map(function ($item) {
+                    $year = Carbon::parse($item->min_date)->year;
+                    $week = (int) $item->workweek;
+
+                    return [
+                        'week' => str_pad($week, 2, '0', STR_PAD_LEFT),
+                        'total' => $item->total,
+                    ];
+                });
+        } else {
+            // ✅ MySQL version
+            $byWeekly = (clone $query)
+                ->selectRaw(
+                    "
+        WEEK(date_raised, 1) as workweek,
+        YEAR(date_raised) as year,
+        COUNT(*) as total
+    ",
+                )
+                ->groupBy('year', 'workweek')
+                ->orderBy('year', 'asc')
+                ->orderBy('workweek', 'asc')
+                ->get()
+                ->map(function ($item) {
+                    $week = (int) $item->workweek;
+
+                    return [
+                        'week' => str_pad($week, 2, '0', STR_PAD_LEFT),
+                        'total' => $item->total,
+                    ];
+                });
+        }
+
+        // ✅ Group by reported_by, count total, sort descending, limit top 10
+        $ranking_data = (clone $query)->select('reported_by', DB::raw('COUNT(*) as total'))->whereNotNull('reported_by')->groupBy('reported_by')->orderByDesc('total')->limit(10)->get();
+
+        // ✅ Include the date range filter info
+        $report_ranking = [
+            'date_filter' => [
+                'from' => $request->date_from ?? Carbon::now()->startOfYear()->toDateString(),
+                'to' => $request->date_to ?? Carbon::now()->toDateString(),
+            ],
+            'ranking' => $ranking_data,
+        ];
+
+        // ✅ Return all datasets
+        return response()->json([
+            'success' => true,
+            'byWeekly' => $byWeekly,
+            'byDate' => $byDate,
+            'byCategory' => $byCategory,
+            'byCompany' => $byCompany,
+            'byType' => $byType,
+            'bySubcategory' => $bySubcategory,
+            'report_ranking' => $report_ranking,
+        ]);
+    }
+
+    public function update(Request $request, HboList $hbo)
+    {
+        // ✅ Validate only editable fields
+        $validated = $request->validate([
+            'business_unit' => 'nullable|string|max:255',
+            'company' => 'nullable|string|max:255',
+            'type' => 'nullable|string|max:255',
+            'category' => 'nullable|string|max:255',
+            'sub_category' => 'nullable|string|max:255',
+            'date_raised' => 'nullable|date',
+            'date_due' => 'nullable|date',
+            'SWA' => 'nullable|string|max:255',
+            'SRO' => 'nullable|string|max:255',
+            'reported_by' => 'nullable|string|max:255',
+            'reported_to' => 'nullable|string|max:255',
+            'hazard_description' => 'nullable|string|max:1000',
+            'recommendation' => 'nullable|string|max:1000',
+        ]);
+
+        // ✅ Update only provided fields
+        foreach ($validated as $key => $value) {
+            $hbo->$key = $value;
+        }
+
+        $hbo->save();
+
+        // ✅ Redirect back to the edit page with success message
+        return redirect()->route('hbo.edit', $hbo->id)->with('success', 'HBO information updated successfully.');
+    }
+
+    public function takeAction(Request $request, HboList $hbo)
+    {
+        // Validate the input
+        $validated = $request->validate([
+            'action_by' => 'required|string|max:255',
+            'action_date' => 'required|date',
+            'action_remarks' => 'required|string|max:1000',
+        ]);
+
+        // Update HBO action details
+        $hbo->action_by = $validated['action_by'];
+        $hbo->action_date = $validated['action_date'];
+        $hbo->action_remarks = $validated['action_remarks'];
+
+        // Move status to For Verification
+        $hbo->status = 'FOR VERIFICATION';
+        $hbo->save();
+
+        // Redirect back with success message
+        return redirect()->route('hbo.edit', $hbo->id)->with('success', 'Action details submitted successfully and moved to For Verification.');
+    }
+
+    public function Verification(Request $request, HboList $hbo)
+    {
+        // Validate the input
+        $validated = $request->validate([
+            'verified_by' => 'required|string|max:255',
+            'verified_date' => 'required|date',
+            'verified_remarks' => 'required|string|max:1000',
+        ]);
+
+        // Update HBO action details
+        $hbo->verified_by = $validated['verified_by'];
+        $hbo->verified_date = $validated['verified_date'];
+        $hbo->verified_remarks = $validated['verified_remarks'];
+
+        // Move status to For Verification
+        $hbo->status = 'CLOSE';
+        $hbo->save();
+
+        // Redirect back with success message
+        return redirect()->route('hbo.edit', $hbo->id)->with('success', 'Verification details submitted successfully.');
+    }
+
+    public function destroy($id)
+    {
+        $hbo = HboList::findOrFail($id);
+        $hbo->delete();
+
+        return redirect()->route('hbo.index')->with('success', 'HBO record deleted successfully.');
+    }
+
+    public function upload(Request $request)
+    {
+        try {
+            $request->validate([
+                'excel_file' => 'required|file|mimes:xlsx,xls,csv',
+            ]);
+
+            $file = $request->file('excel_file');
+            $spreadsheet = IOFactory::load($file->getPathName());
+            $sheet = $spreadsheet->getActiveSheet();
+
+            $rowIterator = $sheet->getRowIterator();
+
+            $expectedHeaders = [
+                'A' => 'business_unit',
+                'B' => 'company',
+                'C' => 'type',
+                'D' => 'category',
+                'E' => 'sub_category',
+                'F' => 'hazard_description',
+                'G' => 'recommendation',
+                'H' => 'reported_by',
+                'I' => 'reported_to',
+                'J' => 'date_raised',
+                'K' => 'date_due',
+                'L' => 'SWA',
+                'M' => 'SRO',
+                'N' => 'action_by',
+                'O' => 'action_date',
+                'P' => 'action_remarks',
+                'Q' => 'verified_by',
+                'R' => 'verified_date',
+                'S' => 'verified_remarks',
+                'T' => 'status',
+            ];
+
+            // Validate headers (only first row)
+            $headerRow = $rowIterator->current()->getCellIterator();
+            $headerRow->setIterateOnlyExistingCells(false);
+
+            $colIndex = 'A';
+            foreach ($headerRow as $cell) {
+                $value = strtolower(trim($cell->getValue()));
+                $expected = strtolower($expectedHeaders[$colIndex] ?? '');
+
+                if ($expected && $value !== $expected) {
+                    return back()->with('error', "Incorrect header in column {$colIndex}. Expected '{$expected}', found '{$value}'.");
+                }
+                $colIndex++;
+            }
+
+            $formatDate = function ($value) {
+                if (empty($value)) {
+                    return null;
+                }
+                if (is_numeric($value)) {
+                    return Date::excelToDateTimeObject($value)->format('Y-m-d');
+                }
+                try {
+                    return Carbon::parse($value)->format('Y-m-d');
+                } catch (\Exception $e) {
+                    return null;
+                }
+            };
+
+            $clean = fn($v) => is_string($v) ? strtoupper(preg_replace('/\s+/', ' ', trim($v))) : $v;
+
+            $batch = [];
+            $batchSize = 300; // smaller batch = safer
+            $auth = Auth::user()->name;
+
+            $rowNumber = 0;
+            foreach ($rowIterator as $row) {
+                $rowNumber++;
+
+                // Skip header
+                if ($rowNumber == 1) {
+                    continue;
+                }
+
+                $cellIterator = $row->getCellIterator();
+                $cellIterator->setIterateOnlyExistingCells(false);
+
+                $cells = [];
+                foreach ($cellIterator as $cell) {
+                    $cells[] = $clean($cell->getValue());
+                }
+
+                // Ignore fully empty row
+                if (count(array_filter($cells)) == 0) {
+                    continue;
+                }
+
+                // ===== Add this block for TYPE normalization =====
+                $allowedTypes = ['SAFE BEHAVIOUR', 'UNSAFE BEHAVIOUR', 'SAFE CONDITION', 'UNSAFE CONDITION'];
+
+                $typeValue = strtoupper(trim($cells[2] ?? ''));
+
+                // Exact match first
+                if (!in_array($typeValue, $allowedTypes)) {
+                    // Fuzzy match
+                    $closest = null;
+                    $shortest = 9999;
+                    foreach ($allowedTypes as $type) {
+                        $lev = levenshtein($typeValue, $type);
+                        if ($lev < $shortest) {
+                            $shortest = $lev;
+                            $closest = $type;
+                        }
+                    }
+                    if ($shortest <= 5) {
+                        // adjust threshold
+                        $typeValue = $closest;
+                    } else {
+                        return back()->with('error', "Invalid TYPE value '{$cells[2]}' on row {$rowNumber}. Allowed values: " . implode(', ', $allowedTypes));
+                    }
+                }
+                // ===== End TYPE normalization =====
+
+                $batch[] = [
+                    'business_unit' => $cells[0] ?? null,
+                    'company' => $cells[1] ?? null,
+                    'type' => $typeValue, // <-- use normalized value
+                    'category' => $cells[3] ?? null,
+                    'sub_category' => $cells[4] ?? null,
+                    'hazard_description' => $cells[5] ?? null,
+                    'recommendation' => $cells[6] ?? null,
+                    'reported_by' => $cells[7] ?? null,
+                    'reported_to' => $cells[8] ?? null,
+                    'date_raised' => $formatDate($cells[9] ?? null),
+                    'date_due' => $formatDate($cells[10] ?? null),
+                    'SWA' => $cells[11] ?? null,
+                    'SRO' => $cells[12] ?? null,
+                    'action_by' => $cells[13] ?? null,
+                    'action_date' => $formatDate($cells[14] ?? null),
+                    'action_remarks' => $cells[15] ?? null,
+                    'verified_by' => $cells[16] ?? null,
+                    'verified_date' => $formatDate($cells[17] ?? null),
+                    'verified_remarks' => $cells[18] ?? null,
+                    'status' => $cells[19] ?? null,
+                    'created_by' => $auth,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+
+                if (count($batch) >= $batchSize) {
+                    HboList::insert($batch);
+                    $batch = [];
+                }
+            }
+
+            if ($batch) {
+                HboList::insert($batch);
+            }
+
+            return back()->with('success', 'Excel data imported successfully!');
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Import failed: ' . $e->getMessage());
+        }
+    }
+}

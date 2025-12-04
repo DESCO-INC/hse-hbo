@@ -1,0 +1,294 @@
+<x-layout>
+    <h1 class="text-xl font-semibold text-gray-800 mb-5">HBO LISTS</h1>
+
+    <form action="{{ url()->current() }}" method="GET">
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-5 border border-gray-100">
+            <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 px-6 py-3">
+                <h1 class="text-lg font-semibold text-gray-800 whitespace-nowrap self-center">Filter</h1>
+
+                <div class="flex flex-wrap items-end gap-4">
+
+                    <!-- Status -->
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-500 mb-1">Status</label>
+                        <select name="status" id="status"
+                            class="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 min-w-[150px]">
+                            <option value="">All Status</option>
+                        </select>
+                    </div>
+
+                    <!-- Business Unit -->
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-500 mb-1">Business Unit</label>
+                        <select name="business_unit" id="business_unit"
+                            class="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 min-w-[150px]">
+                            <option value="">All Business Units</option>
+                        </select>
+                    </div>
+
+                    <!-- Company -->
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-500 mb-1">Group</label>
+                        <select name="company" id="company"
+                            class="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 min-w-[150px]">
+                            <option value="">All Group</option>
+                        </select>
+                    </div>
+
+                    <!-- Date From -->
+                    <input name="date_from" id="date_from" type="date"
+                        class="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 min-w-[150px]"
+                        value="{{ request('date_from', now()->startOfYear()->format('Y-m-d')) }}" />
+
+                    <!-- Date To -->
+                    <input name="date_to" id="date_to" type="date"
+                        class="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 min-w-[150px]"
+                        value="{{ request('date_to', now()->format('Y-m-d')) }}" />
+
+                    <!-- Filter Button -->
+                    <div class="flex flex-col justify-end">
+                        <button type="submit"
+                            class="bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-5 py-2 rounded-md shadow-sm transition whitespace-nowrap">
+                            Apply Filter
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-3">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between px-6 py-4">
+            <h2 class="text-lg font-medium text-gray-800">HBO Lists</h2>
+            <!-- Button Row (Right) -->
+            <div class="flex gap-2 mt-4 sm:mt-0">
+                <a href="{{ url('/hbo/create') }}"
+                    class="bg-green-500 text-white text-xs px-3 py-2 rounded hover:bg-green-600">
+                    Add Item
+                </a>
+                <a href="" class="bg-blue-500 text-white text-xs px-3 py-2 rounded hover:bg-blue-600 hidden">
+                    Export
+                </a>
+                <button class="bg-blue-500 text-white text-xs px-3 py-2 rounded hover:bg-blue-600" id="upload-trigger">
+                    Import
+                </button>
+                <a href="{{ asset('templates/hbo_template_new.xlsx') }}"
+                    class="bg-blue-500 text-white text-xs px-3 py-2 rounded hover:bg-blue-600">
+                    Download Template
+                </a>
+            </div>
+        </div>
+    </div>
+    <!-- HBO Table -->
+    <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+        <div class="px-6 py-5 overflow-x-auto">
+            <div class="overflow-x-auto border border-gray-200 rounded">
+                <table class="min-w-full divide-y divide-gray-200 text-sm table-auto">
+                    <thead class="bg-green-500 text-white">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-sm font-medium w-10">#</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium max-w-[250px]">Hazard Description</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium max-w-[250px]">Recommendation</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium w-32">Group</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium w-36">Date Raised</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium w-28">Status</th>
+                            <th class="px-4 py-3 text-center text-sm font-medium w-24">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @forelse ($hboList as $index => $hbo)
+                            <tr>
+                                <td class="px-4 py-3 text-xs text-gray-800">{{ $hbo->id }}</td>
+
+                                <!-- Truncated columns -->
+                                <td class="px-4 py-3 text-xs text-gray-800 truncate max-w-[250px]"
+                                    title="{{ $hbo->hazard_description }}">
+                                    {{ $hbo->hazard_description }}
+                                </td>
+                                <td class="px-4 py-3 text-xs text-gray-800 truncate max-w-[250px]"
+                                    title="{{ $hbo->recommendation }}">
+                                    {{ $hbo->recommendation }}
+                                </td>
+
+                                <!-- Other columns keep full width -->
+                                <td class="px-4 py-3 text-xs text-gray-800">{{ $hbo->company }}</td>
+                                <td class="px-4 py-3 text-xs text-gray-800">
+                                    {{ \Carbon\Carbon::parse($hbo->date_raised)->format('Y-m-d') }}</td>
+                                @php
+                                    $statusColors = [
+                                        'CLOSE' => ['text' => '#166534', 'bg' => '#bbf7d0'],
+                                        'ONGOING' => ['text' => '#991b1b', 'bg' => '#fecaca'],
+                                        'FOR VERIFICATION' => ['text' => '#78350f', 'bg' => '#fef3c7'],
+                                    ];
+                                    $colors = $statusColors[$hbo->status] ?? ['text' => '#1f2937', 'bg' => '#e5e7eb'];
+                                @endphp
+                                <td class="px-4 py-3 text-xs text-gray-800">
+                                    <span class="inline-block px-2 py-1 text-xs font-semibold rounded-full"
+                                        style="color: {{ $colors['text'] }}; background-color: {{ $colors['bg'] }};">
+                                        {{ $hbo->status }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-2 text-center">
+                                    <a href="{{ url('/hbo/' . $hbo->id . '/edit') }}"
+                                        class="bg-blue-500 text-white text-xs px-2 py-1 rounded hover:bg-blue-600">
+                                        Manage
+                                    </a>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="7" class="px-4 py-2 text-center text-gray-500">No records found.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="mt-8">
+                {{ $hboList->links() }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Excel Upload Modal -->
+    <div id="upload-modal"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+            <h2 class="text-xl font-semibold text-gray-800">Upload Excel File</h2>
+            <p class="mt-2 text-sm text-gray-600">Select an Excel file (.xlsx or .xls) to upload.</p>
+
+            <form id="uploadForm" method="POST" action="{{ route('hbo.upload') }}" enctype="multipart/form-data">
+                @csrf
+                <input type="file" name="excel_file" accept=".xlsx,.xls"
+                    class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 file:border-0 file:bg-gray-100 file:px-3 file:py-1 file:rounded-md file:text-sm file:font-medium file:text-gray-700 hover:file:bg-gray-200"
+                    required>
+
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button type="button"
+                        class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition"
+                        onclick="document.getElementById('upload-modal').classList.add('hidden')">
+                        Cancel
+                    </button>
+
+                    <button type="submit" id="uploadBtn"
+                        class="relative px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition flex items-center justify-center">
+                        <svg id="spinner" class="animate-spin h-5 w-5 mr-2 text-white hidden"
+                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z">
+                            </path>
+                        </svg>
+                        <span id="uploadBtnText">Upload</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    @push('scripts')
+        <script>
+            const uploadForm = document.getElementById('uploadForm');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const spinner = document.getElementById('spinner');
+            const uploadBtnText = document.getElementById('uploadBtnText');
+
+            uploadForm.addEventListener('submit', function() {
+                // Show spinner
+                spinner.classList.remove('hidden');
+                // Disable button
+                uploadBtn.disabled = true;
+                // Change button text
+                uploadBtnText.textContent = 'Uploading...';
+            });
+        </script>
+
+        <script>
+            document.getElementById('upload-trigger').addEventListener('click', function(e) {
+                e.preventDefault();
+                document.getElementById('upload-modal').classList.remove('hidden');
+            });
+
+            // Load business units & companies
+            document.addEventListener('DOMContentLoaded', function() {
+                const businessUnitSelect = document.getElementById('business_unit');
+                const companySelect = document.getElementById('company');
+                const statusSelect = document.getElementById('status'); // ← NEW
+
+                // Load business units
+                fetch('{{ route('hbo.business_unit') }}')
+                    .then(res => res.json())
+                    .then(data => {
+                        data.forEach(bu => {
+                            const option = document.createElement('option');
+                            option.value = bu;
+                            option.textContent = bu;
+
+                            // Pre-select based on previous request
+                            if (bu === "{{ request('business_unit') }}") option.selected = true;
+                            @if (Auth::user()->credentials != 'superadmin')
+                                if (bu === "{{ Auth::user()->business_unit }}") option.selected = true;
+                            @endif
+
+                            businessUnitSelect.appendChild(option);
+                        });
+
+                        if (businessUnitSelect.value) loadCompanies(businessUnitSelect.value);
+                    });
+
+                // Load statuses (NEW)
+                fetch('{{ route('hbo.statuses') }}')
+                    .then(res => res.json())
+                    .then(data => {
+                        if (!Array.isArray(data) || data.length === 0) {
+                            const option = document.createElement('option');
+                            option.value = "";
+                            option.textContent = "No Status Found";
+                            statusSelect.appendChild(option);
+                            return;
+                        }
+
+                        data.forEach(status => {
+                            const option = document.createElement('option');
+                            option.value = status;
+                            option.textContent = status;
+
+                            // Pre-select if coming from request()
+                            if (status === "{{ request('status') }}") option.selected = true;
+
+                            statusSelect.appendChild(option);
+                        });
+                    })
+                    .catch(err => console.error('Error loading statuses:', err));
+
+                // Business Unit change event
+                businessUnitSelect.addEventListener('change', function() {
+                    loadCompanies(this.value);
+                });
+
+                function loadCompanies(businessUnit) {
+                    const companySelect = document.getElementById('company');
+                    companySelect.innerHTML = '<option value="">All Group</option>';
+                    if (!businessUnit) return;
+
+                    const companiesUrl = "{{ route('hbo.companies', ':bu') }}"
+                        .replace(':bu', encodeURIComponent(businessUnit));
+
+                    fetch(companiesUrl)
+                        .then(res => res.json())
+                        .then(data => {
+                            data.forEach(company => {
+                                const option = document.createElement('option');
+                                option.value = company;
+                                option.textContent = company;
+                                companySelect.appendChild(option);
+                            });
+                        })
+                        .catch(err => console.error('Error loading companies:', err));
+                }
+            });
+        </script>
+    @endpush
+</x-layout>
