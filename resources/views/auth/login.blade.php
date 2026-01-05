@@ -4,7 +4,7 @@
             <div class="relative flex flex-col my-6 bg-white shadow-xl border border-slate-200 rounded-lg w-96">
                 <div class="p-4">
                 <h6 class="mb-5 text-slate-500 text-xl font-semibold">
-                    Condition & Behavior Recording (CBR)
+                    HSE Condition & Behavior Recording (CBR)
                 </h6>
                 <form method="POST" action="{{ url('/login') }}">
                 @csrf
