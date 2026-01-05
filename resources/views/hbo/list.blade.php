@@ -100,16 +100,16 @@
                             <tr>
                                 <td class="px-4 py-3 text-xs text-gray-800">{{ $hbo->id }}</td>
 
-                                <!-- Truncated columns -->
-                                <td class="px-4 py-3 text-xs text-gray-800 truncate max-w-[250px]"
+                                <!-- Wrapping columns with sentence case -->
+                                <td class="px-4 py-3 text-xs text-gray-800 max-w-[250px] break-words"
                                     title="{{ $hbo->hazard_description }}">
-                                    {{ $hbo->hazard_description }}
+                                    {{ ucfirst(strtolower($hbo->hazard_description)) }}
                                 </td>
-                                <td class="px-4 py-3 text-xs text-gray-800 truncate max-w-[250px]"
+                                <td class="px-4 py-3 text-xs text-gray-800 max-w-[250px] break-words"
                                     title="{{ $hbo->recommendation }}">
-                                    {{ $hbo->recommendation }}
+                                    {{ ucfirst(strtolower($hbo->recommendation)) }}
                                 </td>
-
+                                
                                 <!-- Other columns keep full width -->
                                 <td class="px-4 py-3 text-xs text-gray-800">{{ $hbo->company }}</td>
                                 <td class="px-4 py-3 text-xs text-gray-800">
