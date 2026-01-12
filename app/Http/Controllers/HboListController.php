@@ -45,32 +45,43 @@ class HboListController extends Controller
     {
         $query = HboList::query();
 
-        // Apply filters
-        if ($request->filled('business_unit') && strtolower($request->business_unit) !== 'all') {
-            $query->where('business_unit', $request->business_unit);
+        /**
+         * ======================
+         * SEARCH ONLY
+         * ======================
+         */
+        if ($request->form_type === 'search' && $request->filled('search')) {
+            $query->where('id', $request->search);
         }
 
-        if ($request->filled('status') && strtolower($request->status) !== 'all') {
-            $query->where('status', $request->status);
+        /**
+         * ======================
+         * FILTER ONLY
+         * ======================
+         */
+        if ($request->form_type === 'filter') {
+            if ($request->filled('business_unit')) {
+                $query->where('business_unit', $request->business_unit);
+            }
+
+            if ($request->filled('status')) {
+                $query->where('status', $request->status);
+            }
+
+            if ($request->filled('company')) {
+                $query->where('company', $request->company);
+            }
+
+            if ($request->filled('date_from') && $request->filled('date_to')) {
+                $query->whereBetween('date_raised', [$request->date_from, $request->date_to]);
+            } elseif ($request->filled('date_from')) {
+                $query->whereDate('date_raised', '>=', $request->date_from);
+            } elseif ($request->filled('date_to')) {
+                $query->whereDate('date_raised', '<=', $request->date_to);
+            }
         }
 
-        if ($request->filled('company') && strtolower($request->company) !== 'all') {
-            $query->where('company', $request->company);
-        }
-
-        if ($request->filled('date_from') && $request->filled('date_to')) {
-            $query->whereBetween('date_raised', [$request->date_from, $request->date_to]);
-        } elseif ($request->filled('date_from')) {
-            $query->whereDate('date_raised', '>=', $request->date_from);
-        } elseif ($request->filled('date_to')) {
-            $query->whereDate('date_raised', '<=', $request->date_to);
-        }
-
-        // Paginate results, 10 per page
-        $hboList = $query->orderBy('id', 'desc')->paginate(10);
-
-        // Keep query parameters in pagination links
-        $hboList->appends($request->all());
+        $hboList = $query->orderBy('id', 'desc')->paginate(10)->appends($request->all());
 
         return view('hbo.list', compact('hboList'));
     }
@@ -375,8 +386,8 @@ class HboListController extends Controller
                 });
         }
 
-        // ✅ Group by reported_by, count total, sort descending, limit top 10
-        $ranking_data = (clone $query)->select('reported_by', DB::raw('COUNT(*) as total'))->whereNotNull('reported_by')->groupBy('reported_by')->orderByDesc('total')->limit(10)->get();
+        // ✅ Group by reported_by, count total, sort descending, limit top 5
+        $ranking_data = (clone $query)->select('reported_by', DB::raw('COUNT(*) as total'))->whereNotNull('reported_by')->groupBy('reported_by')->orderByDesc('total')->limit(5)->get();
 
         // ✅ Include the date range filter info
         $report_ranking = [
@@ -386,6 +397,9 @@ class HboListController extends Controller
             ],
             'ranking' => $ranking_data,
         ];
+
+        // ✅ Total number of unique reported_by
+        $reportees_count = (clone $query)->whereNotNull('reported_by')->distinct('reported_by')->count('reported_by');
 
         // ✅ Return all datasets
         return response()->json([
@@ -397,6 +411,7 @@ class HboListController extends Controller
             'byType' => $byType,
             'bySubcategory' => $bySubcategory,
             'report_ranking' => $report_ranking,
+            'reportees_count' => $reportees_count,
         ]);
     }
 

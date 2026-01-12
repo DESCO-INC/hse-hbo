@@ -2,6 +2,7 @@
     <h1 class="text-xl font-semibold text-gray-800 mb-5">HBO LISTS</h1>
 
     <form action="{{ url()->current() }}" method="GET">
+        <input type="hidden" name="form_type" value="filter">
         <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-5 border border-gray-100">
             <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 px-6 py-3">
                 <h1 class="text-lg font-semibold text-gray-800 whitespace-nowrap self-center">Filter</h1>
@@ -36,14 +37,20 @@
                     </div>
 
                     <!-- Date From -->
-                    <input name="date_from" id="date_from" type="date"
-                        class="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 min-w-[150px]"
-                        value="{{ request('date_from', now()->startOfYear()->format('Y-m-d')) }}" />
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-500 mb-1">Date From</label>
+                        <input name="date_from" id="date_from" type="date"
+                            class="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 min-w-[150px]"
+                            value="{{ request('date_from', now()->startOfYear()->format('Y-m-d')) }}" />
+                    </div>
 
                     <!-- Date To -->
-                    <input name="date_to" id="date_to" type="date"
-                        class="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 min-w-[150px]"
-                        value="{{ request('date_to', now()->format('Y-m-d')) }}" />
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-500 mb-1">Date To</label>
+                        <input name="date_to" id="date_to" type="date"
+                            class="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 min-w-[150px]"
+                            value="{{ request('date_to', now()->format('Y-m-d')) }}" />
+                    </div>
 
                     <!-- Filter Button -->
                     <div class="flex flex-col justify-end">
@@ -82,6 +89,19 @@
     <!-- HBO Table -->
     <div class="bg-white rounded-lg shadow-sm overflow-hidden">
         <div class="px-6 py-5 overflow-x-auto">
+            <!-- Search -->
+            <form method="GET" class="mb-4 flex items-center gap-2">
+                <input type="hidden" name="form_type" value="search">
+
+                <input name="search" id="search" type="text"
+                    class="border border-gray-300 rounded-md px-3 py-1 text-sm text-gray-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 min-w-[150px]"
+                    placeholder="Search By ID" value="{{ request('search') }}" />
+
+                <button class="bg-green-500 text-white text-xs px-2 py-1 rounded hover:bg-green-600" type="submit">
+                    Search
+                </button>
+            </form>
+
             <div class="overflow-x-auto border border-gray-200 rounded">
                 <table class="min-w-full divide-y divide-gray-200 text-sm table-auto">
                     <thead class="bg-green-500 text-white">
@@ -109,7 +129,7 @@
                                     title="{{ $hbo->recommendation }}">
                                     {{ ucfirst(strtolower($hbo->recommendation)) }}
                                 </td>
-                                
+
                                 <!-- Other columns keep full width -->
                                 <td class="px-4 py-3 text-xs text-gray-800">{{ $hbo->company }}</td>
                                 <td class="px-4 py-3 text-xs text-gray-800">

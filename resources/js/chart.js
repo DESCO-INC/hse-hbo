@@ -155,34 +155,42 @@ window.updateHboByCategoryChart = function (byCategory) {
 };
 
 // ✅ HBO Submission by Company (Pie)
+// ✅ HBO Submission by Company (Donut)
 function initHboByCompanyChart() {
     const el = document.querySelector("#hbo-submitted-by-company-chart");
     if (!el) return;
 
     const options = {
         chart: {
-            type: "pie",
-            height: "100%",   // 🔹 Use full height of parent
-            width: "100%",    // 🔹 Use full width of parent
+            type: "donut", // ✅ Pie → Donut
+            height: "100%",
+            width: "100%",
             toolbar: { show: false },
         },
+
         series: [],
         labels: [],
+
         colors: [
             "#AEC6CF", "#77DD77", "#FFB347", "#FFD1DC", "#CBAACB",
             "#FDFD96", "#B5EAD7", "#FFDAC1", "#E2F0CB", "#C7CEEA"
         ],
+
         legend: {
-            position: "bottom", // ✅ Legend under the chart
-            horizontalAlign: "center",
-            fontSize: "10px",
+            position: "right", // ✅ Right side
+            fontSize: "11px",
             markers: { width: 8, height: 8, radius: 2 },
-            itemMargin: { horizontal: 6, vertical: 2 },
-            labels: { colors: "#374151", useSeriesColors: false },
+            itemMargin: { vertical: 4 },
+            labels: { colors: "#374151" },
+
+            // ✅ Make legend scrollable
+            height: 220,
+            offsetY: 0,
         },
+
         dataLabels: {
             enabled: true,
-            formatter: (val, opts) => `${val.toFixed(1)}%`,
+            formatter: (val) => `${val.toFixed(1)}%`,
             style: {
                 fontSize: "10px",
                 fontWeight: "600",
@@ -190,28 +198,50 @@ function initHboByCompanyChart() {
             },
             dropShadow: { enabled: false },
         },
+
         plotOptions: {
             pie: {
+                donut: {
+                    size: "65%", // ✅ Donut thickness
+                    labels: {
+                        show: true,
+                        total: {
+                            show: true,
+                            label: "Total",
+                            fontSize: "12px",
+                            fontWeight: 600,
+                            color: "#374151",
+                        },
+                    },
+                },
                 expandOnClick: false,
-                customScale: 0.9, // ✅ Slightly smaller to fit legend perfectly
-                offsetY: 5,       // ✅ Lift pie a bit for bottom legend
-                dataLabels: { offset: -10 },
+                customScale: 0.85, // ✅ Smaller to make space for legend
             },
         },
+
         grid: {
-            padding: { top: 0, right: 0, bottom: 0, left: 0 }, // ✅ Tight padding
+            padding: {
+                top: 0,
+                right: 10, // ✅ Space for right legend
+                bottom: 0,
+                left: 0,
+            },
         },
+
         responsive: [
             {
                 breakpoint: 768,
                 options: {
                     chart: { height: "100%" },
                     legend: {
-                        position: "bottom",
+                        position: "bottom", // ✅ Stack on mobile
+                        height: undefined,
                         fontSize: "9px",
                     },
-                    dataLabels: {
-                        style: { fontSize: "9px" },
+                    plotOptions: {
+                        pie: {
+                            customScale: 1,
+                        },
                     },
                 },
             },
@@ -222,9 +252,10 @@ function initHboByCompanyChart() {
     window.hboCharts.byCompany = new ApexCharts(el, options);
     window.hboCharts.byCompany.render();
 
-    // ✅ Re-fit chart once layout settles
+    // ✅ Resize after layout settles
     setTimeout(() => window.hboCharts.byCompany.resize(), 300);
 }
+
 
 // ✅ Update pie chart dynamically
 window.updateHboByCompanyChart = function (byCompany) {
@@ -673,11 +704,11 @@ function initHboByWeekChart() {
             colors: ["#3b82f6"], // blue line
         },
         markers: {
-            size: 5,
+            size: 2,
             colors: ["#3b82f6"],
             strokeColors: "#fff",
             strokeWidth: 2,
-            hover: { size: 7 },
+            hover: { size: 5 },
         },
         grid: { borderColor: "#f3f4f6", strokeDashArray: 4 },
         dataLabels: { enabled: false },

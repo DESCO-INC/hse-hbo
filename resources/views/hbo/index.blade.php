@@ -31,12 +31,18 @@
                 </div>
 
                 <!-- Date From -->
-                <input name="date_from" id="date_from" type="date"
-                    class="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 min-w-[150px]" />
+                <div class="flex flex-col">
+                    <label class="text-xs font-medium text-gray-500 mb-1">Date From (mm/dd/yyyy)</label>
+                    <input name="date_from" id="date_from" type="date"
+                        class="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 min-w-[150px]" />
+                </div>
 
                 <!-- Date To -->
-                <input name="date_to" id="date_to" type="date"
-                    class="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 min-w-[150px]" />
+                <div class="flex flex-col">
+                    <label class="text-xs font-medium text-gray-500 mb-1">Date To (mm/dd/yyyy)</label>
+                    <input name="date_to" id="date_to" type="date"
+                        class="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 min-w-[150px]" />
+                </div>
 
                 <!-- Filter Button -->
                 <div class="flex flex-col justify-end">
@@ -102,19 +108,19 @@
         </div>
 
 
-        <div class="col-span-3 row-span-3">
+        <div class="col-span-2 row-span-3">
             <div
                 class="h-full col-span-1 bg-white rounded-lg shadow-md border p-6 hover:shadow-lg transition-shadow duration-200">
                 <div class="flex h-full items-center justify-between">
                     <div class="flex-1 h-full">
-                        <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">HBO Submmited by Date</p>
+                        <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">HBO submitted by Date</p>
                         <div id="hbo-by-date-chart" class="w-full h-full"></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="row-span-3 col-start-4">
+        <div class="row-span-3 col-start-3 col-span-2">
             <div
                 class="bg-white rounded-lg shadow-md border p-6 hover:shadow-lg transition-shadow duration-200 flex flex-col h-full">
                 <p class="text-xs font-medium text-gray-600 uppercase tracking-wide mb-4">HBO Submission by Group</p>
@@ -168,7 +174,7 @@
                 class="h-full col-span-1 bg-white rounded-lg shadow-md border p-6 hover:shadow-lg transition-shadow duration-200">
                 <div class="flex h-full items-center justify-between">
                     <div class="flex-1 h-full">
-                        <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">HBO Submmited by Date
+                        <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">HBO submitted by Date
                             (WEEKLY)</p>
                         <div id="hbo-weekly-chart" class="w-full h-full"></div>
                     </div>
@@ -177,17 +183,34 @@
         </div>
 
         <!-- Must be a direct child of your grid container -->
-        <div class="row-span-3 row-start-11">
+        <div class="row-span-2 row-start-11">
             <div
                 class="bg-white rounded-lg shadow-md border p-6 hover:shadow-lg transition-shadow duration-200 flex flex-col h-full">
-                <p class="text-xs font-medium text-gray-600 uppercase tracking-wide mb-4">
-                    Top 10 Reporters for <br> <span id="ranking-date-range"></span>
+                <p class="text-xs font-medium text-gray-600 uppercase tracking-wide mb-2">
+                    Top 5 Reporters for <br> <span id="ranking-date-range"></span>
                 </p>
                 <div class="flex-1 relative">
                     <div id="ranking_reportedby" class="absolute inset-0 p-2 overflow-auto"></div>
                 </div>
             </div>
         </div>
+
+        <!-- Must be a direct child of your grid container -->
+        <div class="row-span-1">
+            <div
+                class="bg-white rounded-lg shadow-md border p-6 hover:shadow-lg transition-shadow duration-200 flex flex-col h-full">
+
+                <p class="text-xs font-medium text-gray-600 uppercase tracking-wide mb-4">
+                    Total Number of Reportees
+                </p>
+
+                <div class="flex-1 flex items-center justify-center">
+                    <h1 class="text-3xl font-bold" id="reportees_count"></h1>
+                </div>
+
+            </div>
+        </div>
+
 
         <div class="col-span-4 row-span-2 row-start-14">
             <div
@@ -434,9 +457,20 @@
                             const data = response.report_ranking.ranking;
                             const dateRange = response.report_ranking.date_filter;
 
+                            // Function to format date as "Jan. 12, 2026"
+                            function formatDate(dateStr) {
+                                const date = new Date(dateStr);
+                                return date.toLocaleDateString('en-US', {
+                                    month: 'short',
+                                    day: '2-digit',
+                                    year: 'numeric'
+                                });
+                            }
+
                             // Update the date range above the list
                             $("#ranking-date-range").text(
-                                `[${dateRange.from} to ${dateRange.to}]`);
+                                `[${formatDate(dateRange.from)} to ${formatDate(dateRange.to)}]`
+                            );
 
                             // Build HTML list
                             let html = '';
@@ -444,14 +478,21 @@
                                 const crown = index === 0 ? ' 🜲' :
                                     ''; // Add crown only to top 1
                                 html += `
-                                        <p class="text-xs font-medium text-gray-600 uppercase tracking-wide mb-2">
-                                            ${index + 1}. ${item.reported_by} [ ${item.total} ] <span style="color:#efbf04;">${crown}</span>
-                                        </p>`;
+                                    <p class="text-xs font-medium text-gray-600 uppercase tracking-wide mb-2">
+                                        ${index + 1}. ${item.reported_by} [ ${item.total} ] <span style="color:#efbf04;">${crown}</span>
+                                    </p>`;
                             });
 
                             // Populate the div
                             $("#ranking_reportedby").html(html);
                         }
+
+                        // ✅ Update total reportees count
+                        if (typeof response.reportees_count !== 'undefined') {
+                            $("#reportees_count").text(`${response.reportees_count}`);
+                        }
+
+
                     },
                     error: function(xhr) {
                         console.error("❌ AJAX Error:", xhr.responseText);
@@ -460,8 +501,20 @@
             }
 
             function loadWeeklySummary(filters = {}, url = "{{ route('hbo.filter') }}") {
+                // Helper to convert YYYY-MM-DD → "Jan. 12, 2026"
+                function formatDate(dateStr) {
+                    if (!dateStr) return "";
+                    const date = new Date(dateStr);
+                    if (isNaN(date)) return dateStr; // fallback if invalid
+                    return date.toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: '2-digit',
+                        year: 'numeric'
+                    });
+                }
+
                 $.ajax({
-                    url: url, // use route helper like loadChartData
+                    url: url,
                     type: 'GET',
                     data: filters,
                     success: function(response) {
@@ -491,9 +544,11 @@
                                     return; // skip unknown weeks
                             }
 
-                            // Update the week header with date range
-                            const from = item.date_from ?? '';
-                            const to = item.date_to ?? '';
+                            // Format dates
+                            const from = formatDate(item.date_from ?? '');
+                            const to = formatDate(item.date_to ?? '');
+
+                            // Update the week header with formatted date range
                             $(`#${prefix}Header`).html(`
                     <div class="flex justify-between">
                         <span>${formatWeekLabel(prefix)}</span>

@@ -21,7 +21,6 @@ Route::post('/register', [RegisterUserController::class, 'store'])->middleware('
 // HBO Routes
 Route::resource('hbo', HboListController::class)->except(['show'])->middleware('auth'); 
 Route::controller(HboListController::class)->group(function () {
-    Route::get('/hbo/newindex', 'index_new')->name('hbo.index_new');
     Route::get('/hbo/business_unit', 'business_unit')->name('hbo.business_unit');
     Route::get('/hbo/business_unit/{business_unit}/companies', 'company')->name('hbo.companies');
     Route::get('/hbo/statuses', 'statuses')->name('hbo.statuses');
