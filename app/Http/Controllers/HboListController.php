@@ -9,6 +9,10 @@ use Illuminate\Support\Facades\Schema;
 use Carbon\Carbon;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use Illuminate\Support\Facades\Response;
 
 use App\Models\HboList;
 use App\Models\User;
@@ -327,12 +331,26 @@ class HboListController extends Controller
         $connection = config('database.default');
         $monthExpr = $connection === 'sqlite' ? "strftime('%Y-%m', date_raised)" : "DATE_FORMAT(date_raised, '%Y-%m')";
 
-        // ✅ 1. Group by month (for line chart)
-        $byDate = (clone $query)
-            ->selectRaw("{$monthExpr} as month, COUNT(*) as total")
-            ->groupBy('month')
-            ->orderBy('month', 'asc')
-            ->get();
+        $byDate = (clone $query)->selectRaw('DATE(date_raised) as day, COUNT(*) as total')->groupBy('day')->orderBy('day', 'asc')->get();
+
+        // Fill missing days
+        $start = Carbon::parse($request->date_from ?? now()->subMonth());
+        $end = Carbon::parse($request->date_to ?? now());
+
+        $allDays = [];
+        for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
+            $allDays[$date->toDateString()] = 0;
+        }
+
+        foreach ($byDate as $item) {
+            $allDays[$item->day] = $item->total;
+        }
+
+        $byDate = collect($allDays)
+            ->map(function ($total, $day) {
+                return ['day' => $day, 'total' => $total];
+            })
+            ->values();
 
         // ✅ 2. Group by category (for bar chart)
         $byCategory = (clone $query)->selectRaw('category, COUNT(*) as total')->groupBy('category')->orderBy('total', 'desc')->get();
@@ -656,5 +674,89 @@ class HboListController extends Controller
         } catch (\Throwable $e) {
             return back()->with('error', 'Import failed: ' . $e->getMessage());
         }
+    }
+
+    public function export(Request $request)
+    {
+        // ✅ Allow script to run for large datasets
+        set_time_limit(0);
+        ini_set('memory_limit', '1024M');
+
+        $table = 'hbo_list';
+        $columns = Schema::getColumnListing($table);
+
+        // Define which columns are dates
+        $dateColumns = ['date_raised', 'date_due', 'action_date', 'verified_date', 'created_at', 'updated_at'];
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Write header row
+        $sheet->fromArray($columns, null, 'A1');
+        $row = 2;
+
+        $query = HboList::query();
+
+        // Apply filters
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        if ($request->filled('business_unit')) {
+            $query->where('business_unit', $request->business_unit);
+        }
+        if ($request->filled('company')) {
+            $query->where('company', $request->company);
+        }
+        if ($request->filled('date_from')) {
+            $query->whereDate('date_raised', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('date_raised', '<=', $request->date_to);
+        }
+        if ($request->filled('search')) {
+            $query->where('id', $request->search);
+        }
+
+        // ✅ Batch export 500 rows at a time
+        $query->orderBy('id')->chunk(2000, function ($hbos) use ($sheet, &$row, $columns, $dateColumns) {
+            foreach ($hbos as $hbo) {
+                $data = [];
+                foreach ($columns as $col) {
+                    $value = $hbo->{$col};
+                    if ($value && in_array($col, $dateColumns)) {
+                        $value = Date::PHPToExcel(strtotime($value));
+                    }
+                    $data[] = $value;
+                }
+                $sheet->fromArray($data, null, 'A' . $row);
+                $row++;
+            }
+            unset($hbos); // free memory
+        });
+
+        // ✅ Set proper date format per column (apply to entire column)
+        foreach ($dateColumns as $dateCol) {
+            if (in_array($dateCol, $columns)) {
+                $colIndex = array_search($dateCol, $columns) + 1;
+                $colLetter = Coordinate::stringFromColumnIndex($colIndex);
+                $sheet
+                    ->getStyle($colLetter . '2:' . $colLetter . $row)
+                    ->getNumberFormat()
+                    ->setFormatCode('yyyy-mm-dd');
+            }
+        }
+
+        // ✅ Replace auto-size with fixed width (much faster)
+        $lastColumn = Coordinate::stringFromColumnIndex(count($columns));
+        foreach (range('A', $lastColumn) as $col) {
+            $sheet->getColumnDimension($col)->setWidth(20);
+        }
+
+        $writer = new Xlsx($spreadsheet);
+        $fileName = 'hbo_list_' . now()->format('Ymd_His') . '.xlsx';
+
+        return response()->streamDownload(function () use ($writer) {
+            $writer->save('php://output');
+        }, $fileName);
     }
 }

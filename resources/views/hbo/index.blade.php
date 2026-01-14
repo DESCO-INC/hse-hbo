@@ -108,7 +108,7 @@
         </div>
 
 
-        <div class="col-span-2 row-span-3">
+        <div class="col-span-4 row-span-3">
             <div
                 class="h-full col-span-1 bg-white rounded-lg shadow-md border p-6 hover:shadow-lg transition-shadow duration-200">
                 <div class="flex h-full items-center justify-between">
@@ -120,18 +120,7 @@
             </div>
         </div>
 
-        <div class="row-span-3 col-start-3 col-span-2">
-            <div
-                class="bg-white rounded-lg shadow-md border p-6 hover:shadow-lg transition-shadow duration-200 flex flex-col h-full">
-                <p class="text-xs font-medium text-gray-600 uppercase tracking-wide mb-4">HBO Submission by Group</p>
-                <!-- Chart container -->
-                <div class="flex-1 relative">
-                    <div id="hbo-submitted-by-company-chart" class="absolute inset-0"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-span-4 row-span-3 row-start-5">
+        <div class="col-span-2 row-span-3 row-start-5">
             <div
                 class="h-full col-span-1 bg-white rounded-lg shadow-md border p-6 hover:shadow-lg transition-shadow duration-200">
                 <div class="flex h-full items-center justify-between">
@@ -140,6 +129,17 @@
                         </p>
                         <div id="hbo-by-category-chart" class="w-full h-full"></div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row-span-3 row-start-5 col-span-2">
+            <div
+                class="bg-white rounded-lg shadow-md border p-6 hover:shadow-lg transition-shadow duration-200 flex flex-col h-full">
+                <p class="text-xs font-medium text-gray-600 uppercase tracking-wide mb-4">HBO Submission by Group</p>
+                <!-- Chart container -->
+                <div class="flex-1 relative">
+                    <div id="hbo-submitted-by-company-chart" class="absolute inset-0"></div>
                 </div>
             </div>
         </div>
@@ -201,7 +201,7 @@
                 class="bg-white rounded-lg shadow-md border p-6 hover:shadow-lg transition-shadow duration-200 flex flex-col h-full">
 
                 <p class="text-xs font-medium text-gray-600 uppercase tracking-wide mb-4">
-                    Total Number of Reportees
+                    Total Number of Reporters
                 </p>
 
                 <div class="flex-1 flex items-center justify-center">
@@ -295,6 +295,375 @@
             const dateFromInput = document.getElementById('date_from');
             const dateToInput = document.getElementById('date_to');
 
+            const today = new Date();
+            const startOfYear = new Date(today.getFullYear(), 0, 1);
+
+            const formatDate = (date) => {
+                const yyyy = date.getFullYear();
+                const mm = String(date.getMonth() + 1).padStart(2, '0');
+                const dd = String(date.getDate()).padStart(2, '0');
+                return `${yyyy}-${mm}-${dd}`;
+            };
+
+            // ===============================
+            // 1️⃣ Load filters from localStorage or set defaults
+            // ===============================
+            let filters = JSON.parse(localStorage.getItem('hboFilters') || '{}');
+            if (!filters.date_from) filters.date_from = formatDate(startOfYear);
+            if (!filters.date_to) filters.date_to = formatDate(today);
+            if (!filters.business_unit) filters.business_unit = '';
+            if (!filters.company) filters.company = '';
+
+            // Set input values from filters
+            businessUnitSelect.value = filters.business_unit;
+            dateFromInput.value = filters.date_from;
+            dateToInput.value = filters.date_to;
+
+            // ===============================
+            // 2️⃣ Load business units
+            // ===============================
+            fetch('{{ route('hbo.business_unit') }}')
+                .then(res => res.json())
+                .then(data => {
+                    data.forEach(bu => {
+                        const option = document.createElement('option');
+                        option.value = bu;
+                        option.textContent = bu;
+
+                        // Preselect saved filter
+                        if (bu === filters.business_unit) option.selected = true;
+
+                        // Superadmin restriction
+                        @if (Auth::user()->credentials != 'superadmin')
+                            if (bu === "{{ Auth::user()->business_unit }}") option.selected = true;
+                        @endif
+
+                        businessUnitSelect.appendChild(option);
+                    });
+
+                    // Load companies if a business unit is already selected
+                    if (filters.business_unit) {
+                        loadCompanies(filters.business_unit, filters.company);
+                    }
+                });
+
+            // Change business unit → load companies
+            businessUnitSelect.addEventListener('change', function() {
+                loadCompanies(this.value);
+            });
+
+            function loadCompanies(businessUnit, selectedCompany = '') {
+                companySelect.innerHTML = '<option value="">All Companies</option>';
+                if (!businessUnit) return;
+
+                const url = "{{ route('hbo.companies', ':bu') }}".replace(':bu', encodeURIComponent(businessUnit));
+
+                fetch(url)
+                    .then(res => res.json())
+                    .then(data => {
+                        data.forEach(c => {
+                            const option = document.createElement('option');
+                            option.value = c;
+                            option.textContent = c;
+                            if (c === selectedCompany) option.selected = true;
+                            companySelect.appendChild(option);
+                        });
+                    })
+                    .catch(err => console.error('Error loading companies:', err));
+            }
+
+            // ===============================
+            // 3️⃣ Get filters from inputs
+            // ===============================
+            function getFilters() {
+                return {
+                    business_unit: businessUnitSelect.value,
+                    company: companySelect.value,
+                    date_from: dateFromInput.value,
+                    date_to: dateToInput.value
+                };
+            }
+
+            // ===============================
+            // 4️⃣ Apply Filter button
+            // ===============================
+            $("#filter-btn").on("click", function(e) {
+                e.preventDefault();
+                filters = getFilters();
+
+                // Save filters to localStorage
+                localStorage.setItem('hboFilters', JSON.stringify(filters));
+
+                // Reload dashboard/chart/weekly summary
+                loadDashboardCount(filters);
+                loadChartData(filters);
+                loadWeeklySummary(filters);
+            });
+
+            // ===============================
+            // 5️⃣ Initial load based on filters
+            // ===============================
+            loadDashboardCount(filters);
+            loadChartData(filters);
+            loadWeeklySummary(filters);
+
+            // ===============================
+            // 6️⃣ Load Dashboard Counts
+            // ===============================
+            function loadDashboardCount(filters = {}, url = "{{ route('hbo.count') }}") {
+                $.ajax({
+                    url: url,
+                    type: "GET",
+                    data: filters,
+                    success: function(response) {
+                        $("#total-count").text(Number(response.total).toLocaleString());
+                        $("#ongoing-count").text(Number(response.ongoing).toLocaleString());
+                        $("#for-verification-count").text(Number(response.for_verification)
+                            .toLocaleString());
+                        $("#closed-count").text(Number(response.closed).toLocaleString());
+                    },
+                    error: function(xhr) {
+                        $("#total-count,#ongoing-count,#for-verification-count,#closed-count").text(
+                            'Err');
+                        console.error("❌ AJAX Error:", xhr.responseText);
+                    }
+                });
+            }
+
+            // ===============================
+            // 7️⃣ Load Chart Data
+            // ===============================
+            function loadChartData(filters = {}, url = "{{ route('hbo.chartData') }}") {
+                $.ajax({
+                    url: url,
+                    type: "GET",
+                    data: filters,
+                    success: function(response) {
+                        if (response.byDate && window.updateHboByDateChart) window.updateHboByDateChart(
+                            response.byDate);
+                        if (response.byCategory && window.updateHboByCategoryChart) window
+                            .updateHboByCategoryChart(response.byCategory);
+                        if (response.byCompany && window.updateHboByCompanyChart) window
+                            .updateHboByCompanyChart(response.byCompany);
+                        if (response.byType && window.updateHboByTypeChart) window.updateHboByTypeChart(
+                            response.byType);
+                        if (response.bySubcategory && window.updateHboBySubcategoryChart) window
+                            .updateHboBySubcategoryChart(response.bySubcategory);
+                        if (response.byWeekly && window.updateHboByWeekChart) window
+                            .updateHboByWeekChart(response.byWeekly);
+
+                        if (response.report_ranking) {
+                            const data = response.report_ranking.ranking;
+                            const dateRange = response.report_ranking.date_filter;
+                            $("#ranking-date-range").text(
+                                `[${new Date(dateRange.from).toLocaleDateString()} to ${new Date(dateRange.to).toLocaleDateString()}]`
+                                );
+                            let html = '';
+                            data.forEach((item, index) => {
+                                const crown = index === 0 ? ' 🜲' : '';
+                                html += `<p class="text-xs font-medium text-gray-600 uppercase tracking-wide mb-2">
+                            ${index+1}. ${item.reported_by} [ ${item.total} ] <span style="color:#efbf04;">${crown}</span>
+                        </p>`;
+                            });
+                            $("#ranking_reportedby").html(html);
+                        }
+
+                        if (typeof response.reportees_count !== 'undefined') {
+                            $("#reportees_count").text(`${response.reportees_count}`);
+                        }
+                    },
+                    error: function(xhr) {
+                        console.error("❌ AJAX Error:", xhr.responseText);
+                    }
+                });
+            }
+
+            // ===============================
+            // 8️⃣ Load Weekly Summary
+            // ===============================
+            function loadWeeklySummary(filters = {}, url = "{{ route('hbo.filter') }}") {
+                function formatDateDisplay(dateStr) {
+                    if (!dateStr) return '';
+                    const date = new Date(dateStr);
+                    return isNaN(date) ? dateStr : date.toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: '2-digit',
+                        year: 'numeric'
+                    });
+                }
+
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    data: filters,
+                    success: function(response) {
+                        if (!response.weekly_summary || !response.weekly_summary.length) return;
+
+                        let grandTotal = 0;
+                        response.weekly_summary.forEach(item => {
+                            let prefix = '';
+                            switch (item.week_label) {
+                                case 'two_weeks':
+                                    prefix = 'two';
+                                    break;
+                                case 'last_week':
+                                    prefix = 'last';
+                                    break;
+                                case 'this_week':
+                                    prefix = 'this';
+                                    break;
+                                default:
+                                    return;
+                            }
+
+                            const from = formatDateDisplay(item.date_from ?? '');
+                            const to = formatDateDisplay(item.date_to ?? '');
+
+                            $(`#${prefix}Header`).html(`<div class="flex justify-between">
+                        <span>${formatWeekLabel(prefix)}</span>
+                        <span>[${from} - ${to}]</span>
+                    </div>`);
+
+                            $(`#${prefix}Mon`).text(item.mon ?? 0);
+                            $(`#${prefix}Tue`).text(item.tue ?? 0);
+                            $(`#${prefix}Wed`).text(item.wed ?? 0);
+                            $(`#${prefix}Thu`).text(item.thu ?? 0);
+                            $(`#${prefix}Fri`).text(item.fri ?? 0);
+                            $(`#${prefix}Sat`).text(item.sat ?? 0);
+                            $(`#${prefix}Sun`).text(item.sun ?? 0);
+
+                            const total = item.total ?? ((item.mon || 0) + (item.tue || 0) + (
+                                item.wed || 0) + (item.thu || 0) + (item.fri || 0) + (
+                                item.sat || 0) + (item.sun || 0));
+                            $(`#${prefix}Total`).text(total);
+                            grandTotal += total;
+                        });
+
+                        $('#grandTotal').text(grandTotal);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error loading weekly summary:", error);
+                    }
+                });
+            }
+
+            function formatWeekLabel(prefix) {
+                switch (prefix) {
+                    case 'two':
+                        return 'Two Weeks Ago';
+                    case 'last':
+                        return 'Last Week';
+                    case 'this':
+                        return 'This Week';
+                    default:
+                        return '';
+                }
+            }
+        });
+    </script>
+
+    {{-- <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const businessUnitSelect = document.getElementById('business_unit');
+            const companySelect = document.getElementById('company');
+            const dateFromInput = document.getElementById('date_from');
+            const dateToInput = document.getElementById('date_to');
+
+            const today = new Date();
+            const startOfYear = new Date(today.getFullYear(), 0, 1);
+
+            const formatDate = (date) => {
+                const yyyy = date.getFullYear();
+                const mm = String(date.getMonth() + 1).padStart(2, '0');
+                const dd = String(date.getDate()).padStart(2, '0');
+                return `${yyyy}-${mm}-${dd}`;
+            };
+
+            // Default filters
+            let filters = {
+                business_unit: '',
+                company: '',
+                date_from: formatDate(startOfYear),
+                date_to: formatDate(today),
+            };
+
+            // Load from localStorage if exists
+            const storedFilters = localStorage.getItem('hboFilters');
+            if (storedFilters) {
+                filters = JSON.parse(storedFilters);
+            }
+
+            // Set inputs
+            businessUnitSelect.value = filters.business_unit || '';
+            dateFromInput.value = filters.date_from;
+            dateToInput.value = filters.date_to;
+
+            // Load business units first
+            fetch('{{ route('hbo.business_unit') }}')
+                .then(res => res.json())
+                .then(data => {
+                    data.forEach(bu => {
+                        const option = document.createElement('option');
+                        option.value = bu;
+                        option.textContent = bu;
+
+                        // Preselect from localStorage
+                        if (bu === filters.business_unit) {
+                            option.selected = true;
+                        }
+
+                        // Superadmin logic
+                        @if (Auth::user()->credentials != 'superadmin')
+                            if (bu === "{{ Auth::user()->business_unit }}") option.selected = true;
+                        @endif
+
+                        businessUnitSelect.appendChild(option);
+                    });
+
+                    // Load companies if business unit selected
+                    if (filters.business_unit) {
+                        loadCompanies(filters.business_unit, filters.company);
+                    }
+                });
+
+            // Load companies based on selection
+            businessUnitSelect.addEventListener('change', function() {
+                loadCompanies(this.value);
+            });
+
+            function loadCompanies(businessUnit, selectedCompany = '') {
+                const companySelect = document.getElementById('company');
+                companySelect.innerHTML = '<option value="">All Companies</option>';
+
+                if (!businessUnit) return;
+
+                const url = "{{ route('hbo.companies', ':bu') }}".replace(':bu', encodeURIComponent(businessUnit));
+
+                fetch(url)
+                    .then(res => res.json())
+                    .then(data => {
+                        data.forEach(c => {
+                            const option = document.createElement('option');
+                            option.value = c;
+                            option.textContent = c;
+                            if (c === selectedCompany) option.selected = true;
+                            companySelect.appendChild(option);
+                        });
+                    });
+            }
+
+            // Load dashboard/chart/weekly data using filters
+            loadDashboardCount(filters);
+            loadChartData(filters);
+            loadWeeklySummary(filters);
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const businessUnitSelect = document.getElementById('business_unit');
+            const companySelect = document.getElementById('company');
+            const dateFromInput = document.getElementById('date_from');
+            const dateToInput = document.getElementById('date_to');
+
             const formatDate = (date) => {
                 const yyyy = date.getFullYear();
                 const mm = String(date.getMonth() + 1).padStart(2, '0'); // months are 0-indexed
@@ -371,6 +740,8 @@
             $("#filter-btn").on("click", function(e) {
                 e.preventDefault();
                 const filters = getFilters();
+                // Save to localStorage
+                localStorage.setItem('hboFilters', JSON.stringify(filters));
                 loadDashboardCount(filters);
                 loadChartData(filters);
                 loadWeeklySummary(filters);
@@ -388,10 +759,12 @@
                     type: "GET",
                     data: filters,
                     success: function(response) {
-                        $("#total-count").text(response.total);
-                        $("#ongoing-count").text(response.ongoing);
-                        $("#for-verification-count").text(response.for_verification);
-                        $("#closed-count").text(response.closed);
+                        // Format numbers with comma separator
+                        $("#total-count").text(Number(response.total).toLocaleString());
+                        $("#ongoing-count").text(Number(response.ongoing).toLocaleString());
+                        $("#for-verification-count").text(Number(response.for_verification)
+                            .toLocaleString());
+                        $("#closed-count").text(Number(response.closed).toLocaleString());
                     },
                     error: function(xhr) {
                         $("#total-count").text('Err');
@@ -605,5 +978,5 @@
             }
 
         });
-    </script>
+    </script> --}}
 </x-layout>

@@ -31,6 +31,7 @@ Route::controller(HboListController::class)->group(function () {
     Route::get('/hbo/count', 'getDataCounts')->name('hbo.count');
     Route::get('/hbo/chart-data', 'getChartData')->name('hbo.chartData');
     Route::post('/hbo/upload', 'upload')->name('hbo.upload');
+    Route::get('/hbo/export', 'export')->name('hbo.export');
 });
 
 // POB routes
