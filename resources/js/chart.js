@@ -162,7 +162,7 @@ function initHboByCategoryChart() {
             style: {
                 fontSize: "10px",
                 fontWeight: "600",
-                colors: ["#111827"],
+                colors: ["#ffffff"],
             },
         },
         grid: {
@@ -508,7 +508,7 @@ function initHboBySubcategoryChart() {
             style: {
                 fontSize: "10px",
                 fontWeight: "600",
-                colors: ["#111827"],
+                colors: ["#ffffff"],
             },
         },
         // 🔹 Removed the hard-coded colors array

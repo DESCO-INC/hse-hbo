@@ -1,73 +1,73 @@
 {
   "ACTIONS OF PEOPLE": {
-    "color": "#43ce76",
+    "color": "#c00000",
     "subcategories": {
-      "ADJUSTING PPE": "#43ce76",
-      "FOCUS ON THE JOB": "#43ce76",
-      "HORSEPLAYING/ PLAYING DANGEROUS JOKES": "#43ce76",
-      "AGGRESSIVE/ MAD/UNFRIENDLY BEHAVIOR": "#43ce76"
+      "ADJUSTING PPE": "#c00000",
+      "FOCUS ON THE JOB": "#c00000",
+      "HORSEPLAYING/ PLAYING DANGEROUS JOKES": "#c00000",
+      "AGGRESSIVE/ MAD/UNFRIENDLY BEHAVIOR": "#c00000"
     }
   },
   "PPE": {
-    "color": "#42a5f5",
+    "color": "#953201",
     "subcategories": {
-      "HEAD": "#42a5f5",
-      "EYES & FACE": "#42a5f5",
-      "EARS": "#42a5f5",
-      "RESPIRATORY SYSTEM": "#42a5f5",
-      "ARMS & HANDS": "#42a5f5",
-      "BODY": "#42a5f5",
-      "LEGS & FEET": "#42a5f5"
+      "HEAD": "#953201",
+      "EYES & FACE": "#953201",
+      "EARS": "#953201",
+      "RESPIRATORY SYSTEM": "#953201",
+      "ARMS & HANDS": "#953201",
+      "BODY": "#953201",
+      "LEGS & FEET": "#953201"
     }
   },
   "POSITIONS OF PEOPLE": {
-    "color": "#66bb6a",
+    "color": "#ed7d31",
     "subcategories": {
-      "STRIKING AGAINST OBJECTS": "#66bb6a",
-      "STRUCK BY OBJECTS": "#66bb6a",
-      "CAUGHT IN, ON, OR BETWEEN OBJECTS": "#66bb6a",
-      "SLIPS, TRIPS, FALLS": "#66bb6a",
-      "CONTACTING EXTREME TEMP": "#66bb6a",
-      "CONTACTING ELECTRIC CURRENT": "#66bb6a",
-      "CONTACTING HAZARDOUS SUBSTANCES": "#66bb6a",
-      "MANUAL HANDLING": "#66bb6a",
-      "REPETITIVE MOTIONS": "#66bb6a",
-      "AWKWARD POSITION, BENDING, REACHING": "#66bb6a"
+      "STRIKING AGAINST OBJECTS": "#ed7d31",
+      "STRUCK BY OBJECTS": "#ed7d31",
+      "CAUGHT IN, ON, OR BETWEEN OBJECTS": "#ed7d31",
+      "SLIPS, TRIPS, FALLS": "#ed7d31",
+      "CONTACTING EXTREME TEMP": "#ed7d31",
+      "CONTACTING ELECTRIC CURRENT": "#ed7d31",
+      "CONTACTING HAZARDOUS SUBSTANCES": "#ed7d31",
+      "MANUAL HANDLING": "#ed7d31",
+      "REPETITIVE MOTIONS": "#ed7d31",
+      "AWKWARD POSITION, BENDING, REACHING": "#ed7d31"
     }
   },
   "FACILITIES & HOUSEKEEPING": {
-    "color": "#ffb300",
+    "color": "#002060",
     "subcategories": {
-      "MECHANICAL": "#ffb300",
-      "ELECTRICAL / ELECTRONICS": "#ffb300",
-      "CIVIL / STRUCTURAL": "#ffb300",
-      "AESTHETICS, ORDERLINESS & SANITATION": "#ffb300",
-      "PIPING / PLUMBING": "#ffb300"
+      "MECHANICAL": "#002060",
+      "ELECTRICAL / ELECTRONICS": "#002060",
+      "CIVIL / STRUCTURAL": "#002060",
+      "AESTHETICS, ORDERLINESS & SANITATION": "#002060",
+      "PIPING / PLUMBING": "#002060"
     }
   },
   "CONDITIONS OF PEOPLE": {
-    "color": "#f06292",
+    "color": "#ff00ff",
     "subcategories": {
-      "IN GOOD PHYSICAL CONDITION": "#f06292",
-      "NOT UNDER INFLUENCE OF DRUGS / ALCOHOL": "#f06292",
-      "IN GOOD MENTAL ORDER": "#f06292",
-      "NO ILLEGAL DRUGS / ALCOHOL / WEAPON": "#f06292"
+      "IN GOOD PHYSICAL CONDITION": "#ff00ff",
+      "NOT UNDER INFLUENCE OF DRUGS / ALCOHOL": "#ff00ff",
+      "IN GOOD MENTAL ORDER": "#ff00ff",
+      "NO ILLEGAL DRUGS / ALCOHOL / WEAPON": "#ff00ff"
     }
   },
   "TOOLS, MACHINERIES & EQUIPMENT": {
-    "color": "#7e57c2",
+    "color": "#7030a0",
     "subcategories": {
-      "RIGHT FOR THE JOB": "#7e57c2",
-      "USED CORRECTLY": "#7e57c2",
-      "VERIFIED IN SAFE CONDITION": "#7e57c2"
+      "RIGHT FOR THE JOB": "#7030a0",
+      "USED CORRECTLY": "#7030a0",
+      "VERIFIED IN SAFE CONDITION": "#7030a0"
     }
   },
   "PROCEDURES": {
-    "color": "#ffca28",
+    "color": "#008000",
     "subcategories": {
-      "AVAILABLE & WORKABLE": "#ffca28",
-      "KNOWN & UNDERSTOOD": "#ffca28",
-      "FOLLOWED": "#ffca28"
+      "AVAILABLE & WORKABLE": "#008000",
+      "KNOWN & UNDERSTOOD": "#008000",
+      "FOLLOWED": "#008000"
     }
   }
 }
