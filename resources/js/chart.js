@@ -109,9 +109,6 @@ window.updateHboByDateChart = function (byDate) {
 };
 
 
-
-
-
 // ✅ HBO By Category Chart (Vertical Bar)
 function initHboByCategoryChart() {
     const el = document.querySelector("#hbo-by-category-chart");
@@ -124,15 +121,23 @@ function initHboByCategoryChart() {
             width: "100%",
             toolbar: { show: false },
         },
-        series: [{ name: "Total Reports", data: [] }],
+        series: [
+            {
+                name: "Total Reports",
+                data: [], // will be updated dynamically
+            },
+        ],
         xaxis: {
             categories: [],
             labels: {
-                rotate: 0, // 🔹 keep text straight, not diagonal
-                trim: true,
                 style: {
-                    colors: "#6b7280",
-                    fontSize: "9px", // 🔹 slightly larger than 8px for readability
+                    fontSize: "10px",
+                    colors: "#374151",
+                },
+                rotate: 0,
+                formatter: function (val) {
+                    // truncate labels longer than 6 characters
+                    return val.length > 6 ? val.substring(0, 6) + "..." : val;
                 },
             },
             axisBorder: { color: "#e5e7eb" },
@@ -140,41 +145,84 @@ function initHboByCategoryChart() {
         },
         yaxis: {
             labels: {
-                style: { colors: "#6b7280", fontSize: "9px" },
+                style: { fontSize: "10px", colors: "#374151" },
             },
         },
         plotOptions: {
             bar: {
-                borderRadius: 6,
-                columnWidth: "40%", // 🔹 narrower bars to fit more categories
+                horizontal: false,
+                borderRadius: 4,
+                columnWidth: "70%", // 🔹 wider bars
+                dataLabels: { position: "top" },
             },
         },
-        grid: { borderColor: "#f3f4f6", strokeDashArray: 4 },
-        dataLabels: { enabled: false },
-        stroke: { show: true, width: 2, colors: ["transparent"] },
-        colors: ["#22c55e"],
-        tooltip: { y: { formatter: (val) => `${val} reports` } },
+        dataLabels: {
+            enabled: true,
+            formatter: (val) => val.toLocaleString(),
+            style: {
+                fontSize: "10px",
+                fontWeight: "600",
+                colors: ["#111827"],
+            },
+        },
+        grid: {
+            borderColor: "#e5e7eb",
+            xaxis: { lines: { show: false } },
+            yaxis: { lines: { show: true } },
+            padding: { left: 5, right: 5 },
+        },
+        tooltip: {
+            x: {
+                formatter: function (val, opts) {
+                    const dataPointIndex = opts.dataPointIndex;
+                    return opts.w.globals.labels[dataPointIndex];
+                }
+            },
+            y: {
+                formatter: (val) => `${val} reports`,
+            },
+        },
         legend: { show: false },
     };
 
     window.hboCharts.byCategory = new ApexCharts(el, options);
     window.hboCharts.byCategory.render();
+
+    setTimeout(() => window.hboCharts.byCategory.resize(), 300);
 }
 
 // ✅ Update bar chart (HBO by Category)
 window.updateHboByCategoryChart = function (byCategory) {
     if (!window.hboCharts.byCategory) return;
 
+    // Each data point includes x (category), y (total), fillColor (from JSON)
+    const data = byCategory.map(item => ({
+        x: item.category ?? "Uncategorized",
+        y: item.total ?? 0,
+        fillColor: item.color ?? "#22c55e"
+    }));
+
+    // Update x-axis categories
     const categories = byCategory.map(item => item.category ?? "Uncategorized");
-    const totals = byCategory.map(item => item.total ?? 0);
 
     window.hboCharts.byCategory.updateOptions({
         xaxis: { categories },
+        plotOptions: {
+            bar: {
+                borderRadius: 4,
+                columnWidth: "70%" // 🔹 match Subcategory width
+            },
+        }
     });
-    window.hboCharts.byCategory.updateSeries([{ name: "Total Reports", data: totals }]);
+
+    window.hboCharts.byCategory.updateSeries([{
+        name: "Total Reports",
+        data: data
+    }]);
 };
 
-// ✅ HBO Submission by Company (Pie)
+
+
 // ✅ HBO Submission by Company (Donut)
 function initHboByCompanyChart() {
     const el = document.querySelector("#hbo-submitted-by-company-chart");
@@ -328,8 +376,7 @@ function initHboByTypeChart() {
         // ✅ Legend below the chart
         legend: {
             show: true,
-            position: "bottom",
-            horizontalAlign: "center",
+            position: "left", // ✅ LEFT SIDE
             fontSize: "11px",
             markers: {
                 width: 10,
@@ -337,9 +384,11 @@ function initHboByTypeChart() {
                 radius: 2,
             },
             itemMargin: {
-                horizontal: 8,
                 vertical: 4,
             },
+
+            // ✅ Scrollable legend (same idea as donut)
+            height: 220,
         },
 
         dataLabels: {
@@ -353,15 +402,12 @@ function initHboByTypeChart() {
             dropShadow: { enabled: false },
         },
 
-        // ❌ removed donut config
-        // plotOptions: {
-        //     pie: {
-        //         donut: {
-        //             size: "55%",
-        //             labels: { show: false },
-        //         },
-        //     },
-        // },
+        plotOptions: {
+            pie: {
+                customScale: 0.85, // ✅ Makes room for left legend
+                expandOnClick: false,
+            },
+        },
 
         stroke: {
             show: true,
@@ -377,8 +423,16 @@ function initHboByTypeChart() {
             {
                 breakpoint: 768,
                 options: {
-                    legend: { fontSize: "9px" },
-                    dataLabels: { style: { fontSize: "9px" } },
+                    legend: {
+                        position: "bottom", // ✅ Mobile friendly
+                        height: undefined,
+                        fontSize: "9px",
+                    },
+                    plotOptions: {
+                        pie: {
+                            customScale: 1,
+                        },
+                    },
                 },
             },
         ],
@@ -401,7 +455,6 @@ window.updateHboByTypeChart = function (byType) {
     window.hboCharts.byType.updateSeries(totals);
 };
 
-
 // ✅ HBO Submitted by Sub-Category (Vertical Bar)
 function initHboBySubcategoryChart() {
     const el = document.querySelector("#hbo-by-subcategory-chart");
@@ -417,7 +470,7 @@ function initHboBySubcategoryChart() {
         series: [
             {
                 name: "Total Submissions",
-                data: [],
+                data: [], // will be updated dynamically
             },
         ],
         xaxis: {
@@ -428,7 +481,7 @@ function initHboBySubcategoryChart() {
                     colors: "#374151",
                 },
                 formatter: function (val) {
-                    // truncate labels longer than 12 characters
+                    // truncate labels longer than 6 characters
                     return val.length > 6 ? val.substring(0, 6) + "..." : val;
                 },
             },
@@ -445,7 +498,7 @@ function initHboBySubcategoryChart() {
             bar: {
                 horizontal: false,
                 borderRadius: 4,
-                columnWidth: "50%",
+                columnWidth: "70%",
                 dataLabels: { position: "top" },
             },
         },
@@ -458,7 +511,7 @@ function initHboBySubcategoryChart() {
                 colors: ["#111827"],
             },
         },
-        colors: ["#FF5733", "#33FF57", "#3357FF", "#FF33A8", "#FFBD33", "#33FFF3", "#8D33FF", "#FF6F33", "#33FF8D", "#FF3380"],
+        // 🔹 Removed the hard-coded colors array
         grid: {
             borderColor: "#e5e7eb",
             xaxis: { lines: { show: false } },
@@ -469,7 +522,6 @@ function initHboBySubcategoryChart() {
             x: {
                 formatter: function (val, opts) {
                     // show full sub-category name in tooltip
-                    const seriesIndex = opts.seriesIndex;
                     const dataPointIndex = opts.dataPointIndex;
                     return opts.w.globals.labels[dataPointIndex];
                 }
@@ -491,17 +543,31 @@ function initHboBySubcategoryChart() {
 window.updateHboBySubcategoryChart = function (bySubcategory) {
     if (!window.hboCharts.bySubcategory) return;
 
+    // 🔹 Take top 10 by total reports
     const top10 = bySubcategory.sort((a, b) => b.total - a.total).slice(0, 10);
 
-    const categories = top10.map((item) => item.sub_category ?? "Unspecified");
-    const totals = top10.map((item) => item.total ?? 0);
+    // Each data point includes y value + fillColor
+    const data = top10.map(item => ({
+        x: item.sub_category ?? "Unspecified",
+        y: item.total ?? 0,
+        fillColor: item.color ?? "#22c55e" // 🔹 use color from JSON
+    }));
+
+    // Update x-axis categories
+    const categories = top10.map(item => item.sub_category ?? "Unspecified");
 
     window.hboCharts.bySubcategory.updateOptions({
         chart: { height: "100%", width: "100%" },
-        xaxis: { categories },
+        xaxis: { categories }
     });
-    window.hboCharts.bySubcategory.updateSeries([{ data: totals }]);
+
+    // Update series with per-bar colors
+    window.hboCharts.bySubcategory.updateSeries([{
+        name: "Total Submissions",
+        data: data
+    }]);
 };
+
 
 
 // ✅ HBO vs POB by Company (Horizontal Bar)

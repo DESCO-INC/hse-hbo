@@ -352,17 +352,45 @@ class HboListController extends Controller
             })
             ->values();
 
-        // ✅ 2. Group by category (for bar chart)
-        $byCategory = (clone $query)->selectRaw('category, COUNT(*) as total')->groupBy('category')->orderBy('total', 'desc')->get();
+        $categoriesData = json_decode(file_get_contents(resource_path('json/categories.json')), true);
+
+        // // ✅ 2. Group by category (for bar chart)
+        // $byCategory = (clone $query)->selectRaw('category, COUNT(*) as total')->groupBy('category')->orderBy('total', 'desc')->get();
+
+        // // ✅ Group by sub-category
+        // $bySubcategory = (clone $query)->selectRaw('sub_category, COUNT(*) as total')->groupBy('sub_category')->orderBy('total', 'desc')->get();
+
+        // 1️⃣ Group by category (for bar chart)
+        $byCategory = (clone $query)
+            ->selectRaw('category, COUNT(*) as total')
+            ->groupBy('category')
+            ->orderBy('total', 'desc')
+            ->get()
+            ->map(function ($item) use ($categoriesData) {
+                // Assign the color from JSON
+                $item->color = $categoriesData[$item->category]['color'] ?? '#000000';
+                return $item;
+            });
+
+        // 2️⃣ Group by sub-category
+        $bySubcategory = (clone $query)
+            ->selectRaw('sub_category, category, COUNT(*) as total')
+            ->groupBy('sub_category', 'category')
+            ->orderBy('total', 'desc')
+            ->get()
+            ->map(function ($item) use ($categoriesData) {
+                // Get the parent category first
+                $category = $item->category;
+                // Assign the color from JSON
+                $item->color = $categoriesData[$category]['subcategories'][$item->sub_category] ?? ($categoriesData[$category]['color'] ?? '#000000');
+                return $item;
+            });
 
         // ✅ 3. Group by company (for new chart)
         $byCompany = (clone $query)->selectRaw('company, COUNT(*) as total')->groupBy('company')->orderBy('total', 'desc')->get();
 
         // ✅ New: Group by Type
         $byType = (clone $query)->selectRaw('type, COUNT(*) as total')->groupBy('type')->orderBy('total', 'desc')->get();
-
-        // ✅ Group by sub-category
-        $bySubcategory = (clone $query)->selectRaw('sub_category, COUNT(*) as total')->groupBy('sub_category')->orderBy('total', 'desc')->get();
 
         if ($connection === 'sqlite') {
             // SQLite version (approximation, not as precise)
@@ -425,9 +453,9 @@ class HboListController extends Controller
             'byWeekly' => $byWeekly,
             'byDate' => $byDate,
             'byCategory' => $byCategory,
+            'bySubcategory' => $bySubcategory,
             'byCompany' => $byCompany,
             'byType' => $byType,
-            'bySubcategory' => $bySubcategory,
             'report_ranking' => $report_ranking,
             'reportees_count' => $reportees_count,
         ]);

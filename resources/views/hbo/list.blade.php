@@ -269,10 +269,49 @@
         </div>
     </div>
 
+    <!-- Excel Upload Modal -->
+    <div id="upload-modal"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+            <h2 class="text-xl font-semibold text-gray-800">Upload Excel File</h2>
+            <p class="mt-2 text-sm text-gray-600">Select an Excel file (.xlsx or .xls) to upload.</p>
 
+            <form id="uploadForm" method="POST" action="{{ route('hbo.upload') }}" enctype="multipart/form-data">
+                @csrf
+                <input type="file" name="excel_file" accept=".xlsx,.xls"
+                    class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 file:border-0 file:bg-gray-100 file:px-3 file:py-1 file:rounded-md file:text-sm file:font-medium file:text-gray-700 hover:file:bg-gray-200"
+                    required>
+
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button type="button"
+                        class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition"
+                        onclick="document.getElementById('upload-modal').classList.add('hidden')">
+                        Cancel
+                    </button>
+
+                    <button type="submit" id="uploadBtn"
+                        class="relative px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition flex items-center justify-center">
+                        <svg id="spinner" class="animate-spin h-5 w-5 mr-2 text-white hidden"
+                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z">
+                            </path>
+                        </svg>
+                        <span id="uploadBtnText">Upload</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     @push('scripts')
         <script>
+            document.getElementById('upload-trigger').addEventListener('click', function(e) {
+                e.preventDefault();
+                document.getElementById('upload-modal').classList.remove('hidden');
+            });
+
             document.addEventListener('DOMContentLoaded', function() {
                 // ===============================
                 // 1️⃣ Elements

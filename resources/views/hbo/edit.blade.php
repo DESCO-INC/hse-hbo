@@ -65,7 +65,7 @@
                     <x-form-label for="category">Category</x-form-label>
                     <x-form-select name="category" id="category" disabled>
                         <option value="">Select Category</option>
-                        @foreach ($categories as $category => $subcategories)
+                        @foreach ($categories as $category => $data)
                             <option value="{{ $category }}"
                                 {{ old('category', $hbo->category ?? '') == $category ? 'selected' : '' }}>
                                 {{ $category }}
@@ -80,8 +80,8 @@
                     <x-form-label for="sub_category">Sub Category</x-form-label>
                     <x-form-select name="sub_category" id="sub_category" disabled>
                         <option value="">Select Sub Category</option>
-                        @if (isset($hbo->category) && isset($categories[$hbo->category]))
-                            @foreach ($categories[$hbo->category] as $sub)
+                        @if (isset($hbo->category) && isset($categories[$hbo->category]['subcategories']))
+                            @foreach ($categories[$hbo->category]['subcategories'] as $sub => $color)
                                 <option value="{{ $sub }}"
                                     {{ old('sub_category', $hbo->sub_category ?? '') == $sub ? 'selected' : '' }}>
                                     {{ $sub }}
@@ -313,80 +313,80 @@
 
     <!-- JAVASCRIPT -->
     <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const businessUnitSelect = document.getElementById('business_unit');
-    const companySelect = document.getElementById('company');
+        document.addEventListener('DOMContentLoaded', function() {
+            const businessUnitSelect = document.getElementById('business_unit');
+            const companySelect = document.getElementById('company');
 
-    const currentBU = "{{ $hbo->business_unit }}";
-    const currentCompany = "{{ $hbo->company }}";
+            const currentBU = "{{ $hbo->business_unit }}";
+            const currentCompany = "{{ $hbo->company }}";
 
-    // Generate the route URL in Blade with a placeholder
-    const companiesRouteTemplate = "{{ route('org.business_unit.companies', ':bu') }}";
+            // Generate the route URL in Blade with a placeholder
+            const companiesRouteTemplate = "{{ route('org.business_unit.companies', ':bu') }}";
 
-    // Load business units
-    fetch('{{ route('org.business_unit') }}')
-        .then(res => res.json())
-        .then(data => {
-            businessUnitSelect.innerHTML = '';
-            data.forEach(bu => {
-                const option = document.createElement('option');
-                option.value = bu;
-                option.textContent = bu;
+            // Load business units
+            fetch('{{ route('org.business_unit') }}')
+                .then(res => res.json())
+                .then(data => {
+                    businessUnitSelect.innerHTML = '';
+                    data.forEach(bu => {
+                        const option = document.createElement('option');
+                        option.value = bu;
+                        option.textContent = bu;
 
-                // Pre-select current BU
-                if (bu === currentBU) option.selected = true;
+                        // Pre-select current BU
+                        if (bu === currentBU) option.selected = true;
 
-                @if(Auth::user()->credentials != 'superadmin')
-                    if (bu === "{{ Auth::user()->business_unit }}") option.selected = true;
-                @endif
+                        @if (Auth::user()->credentials != 'superadmin')
+                            if (bu === "{{ Auth::user()->business_unit }}") option.selected = true;
+                        @endif
 
-                businessUnitSelect.appendChild(option);
+                        businessUnitSelect.appendChild(option);
+                    });
+
+                    // Load companies for selected BU
+                    if (businessUnitSelect.value) loadCompanies(businessUnitSelect.value);
+                });
+
+            businessUnitSelect.addEventListener('change', function() {
+                loadCompanies(this.value);
             });
 
-            // Load companies for selected BU
-            if (businessUnitSelect.value) loadCompanies(businessUnitSelect.value);
-        });
-
-    businessUnitSelect.addEventListener('change', function() {
-        loadCompanies(this.value);
-    });
-
-    function loadCompanies(businessUnit) {
-        companySelect.innerHTML = '<option value="">Select Company</option>';
-        if (!businessUnit) return;
-
-        // ✅ Use the Blade-generated route with placeholder replaced
-        const companiesUrl = companiesRouteTemplate.replace(':bu', encodeURIComponent(businessUnit));
-
-        fetch(companiesUrl)
-            .then(res => res.json())
-            .then(data => {
+            function loadCompanies(businessUnit) {
                 companySelect.innerHTML = '<option value="">Select Company</option>';
-                if (!data.length) {
-                    const noOption = document.createElement('option');
-                    noOption.value = '';
-                    noOption.textContent = 'No companies';
-                    noOption.disabled = true;
-                    companySelect.appendChild(noOption);
-                    return;
-                }
+                if (!businessUnit) return;
 
-                data.forEach(company => {
-                    const name = company.company_name; // object property
-                    const option = document.createElement('option');
-                    option.value = name;
-                    option.textContent = name;
+                // ✅ Use the Blade-generated route with placeholder replaced
+                const companiesUrl = companiesRouteTemplate.replace(':bu', encodeURIComponent(businessUnit));
 
-                    // Pre-select current company
-                    if (name === currentCompany) option.selected = true;
+                fetch(companiesUrl)
+                    .then(res => res.json())
+                    .then(data => {
+                        companySelect.innerHTML = '<option value="">Select Company</option>';
+                        if (!data.length) {
+                            const noOption = document.createElement('option');
+                            noOption.value = '';
+                            noOption.textContent = 'No companies';
+                            noOption.disabled = true;
+                            companySelect.appendChild(noOption);
+                            return;
+                        }
 
-                    companySelect.appendChild(option);
-                });
-            })
-            .catch(err => console.error('Error fetching companies:', err));
-    }
-});
-</script>
+                        data.forEach(company => {
+                            const name = company.company_name; // object property
+                            const option = document.createElement('option');
+                            option.value = name;
+                            option.textContent = name;
+
+                            // Pre-select current company
+                            if (name === currentCompany) option.selected = true;
+
+                            companySelect.appendChild(option);
+                        });
+                    })
+                    .catch(err => console.error('Error fetching companies:', err));
+            }
+        });
+    </script>
 
 
 
@@ -443,13 +443,17 @@ document.addEventListener('DOMContentLoaded', function() {
         categorySelect.addEventListener('change', function() {
             const selected = this.value;
             subCategorySelect.innerHTML = '<option value="">Select Sub Category</option>';
-            if (allCategories[selected]) {
-                allCategories[selected].forEach(sub => {
-                    const option = document.createElement('option');
-                    option.value = sub;
-                    option.textContent = sub;
-                    subCategorySelect.appendChild(option);
-                });
+
+            if (allCategories[selected] && allCategories[selected].subcategories) {
+                const subcategories = allCategories[selected].subcategories;
+                for (const sub in subcategories) {
+                    if (subcategories.hasOwnProperty(sub)) {
+                        const option = document.createElement('option');
+                        option.value = sub;
+                        option.textContent = sub;
+                        subCategorySelect.appendChild(option);
+                    }
+                }
             }
         });
 

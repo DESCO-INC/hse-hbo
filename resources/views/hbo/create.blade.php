@@ -96,10 +96,10 @@
                     <x-form-select name="SWA" id="SWA" required>
                         <option value="">Select SWA</option>
                         @foreach ($swa_sro['SWA'] as $item)
-                            <option value="{{ $item}}">{{ $item }}</option>
+                            <option value="{{ $item }}">{{ $item }}</option>
                         @endforeach
                     </x-form-select>
-                    <x-form-error name="SWA"/>
+                    <x-form-error name="SWA" />
                 </div>
 
                 <!-- SRO -->
@@ -118,7 +118,8 @@
                 <!-- Reporter Info -->
                 <div class="col-span-2">
                     <x-form-label for="reported_by">Reported By</x-form-label>
-                    <x-form-input id="reported_by" name="reported_by" value="{{ Auth::user()->name ?? '' }}" required />
+                    <x-form-input id="reported_by" name="reported_by" value="{{ Auth::user()->name ?? '' }}"
+                        required />
                     <x-form-error name='reported_by' />
                 </div>
 
@@ -167,16 +168,20 @@
             const selectedCategory = this.value;
             subCategorySelect.innerHTML = '<option value="">Select Sub Category</option>';
 
-            if (categories[selectedCategory]) {
-                categories[selectedCategory].forEach(sub => {
-                    const opt = document.createElement('option');
-                    opt.value = sub;
-                    opt.textContent = sub;
-                    subCategorySelect.appendChild(opt);
-                });
+            if (categories[selectedCategory] && categories[selectedCategory].subcategories) {
+                const subcategories = categories[selectedCategory].subcategories;
+                for (const sub in subcategories) {
+                    if (subcategories.hasOwnProperty(sub)) {
+                        const opt = document.createElement('option');
+                        opt.value = sub;
+                        opt.textContent = sub;
+                        subCategorySelect.appendChild(opt);
+                    }
+                }
             }
         });
     </script>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
