@@ -153,17 +153,19 @@
                 <!-- Description -->
                 <div class="md:col-span-2">
                     <x-form-label for="hazard_description">Hazard Description</x-form-label>
-                    <x-form-input id="hazard_description" name="hazard_description"
-                        value="{{ $hbo->hazard_description }}" disabled />
-                    <x-form-error name='hazard_description' />
+                    <textarea id="hazard_description" name="hazard_description" rows="4" disabled
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">{{ ucfirst(strtolower($hbo->hazard_description)) }}</textarea>
+                    <x-form-error name="hazard_description" />
                 </div>
 
                 <div class="md:col-span-2">
                     <x-form-label for="recommendation">Recommendation</x-form-label>
-                    <x-form-input id="recommendation" name="recommendation" value="{{ $hbo->recommendation }}"
-                        disabled />
-                    <x-form-error name='recommendation' />
+                    <textarea id="recommendation" name="recommendation" rows="4" disabled
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">{{ ucfirst(strtolower($hbo->recommendation)) }}</textarea>
+                    <x-form-error name="recommendation" />
                 </div>
+
+
 
                 <!-- Buttons -->
                 <div class="md:col-span-4 mt-6 flex flex-wrap gap-2">

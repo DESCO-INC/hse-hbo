@@ -54,7 +54,7 @@
                     <x-form-error name='date' />
                 </div>
 
-                <div id="companyContainer" class="relative col-span-4 grid grid-flow-col auto-cols-fr gap-4">
+                <div id="companyContainer" class="relative col-span-4 grid grid-cols-10 gap-4">
                     <!-- Company inputs will be injected here dynamically -->
                 </div>
 
