@@ -10,6 +10,7 @@ use Illuminate\Validation\Rules\Password;
 
 use App\Models\User;
 use App\Models\Organization;
+use App\Models\AuditTrail;
 
 class MaintenanceController extends Controller
 {
@@ -101,5 +102,11 @@ class MaintenanceController extends Controller
         Auth::logout();
 
         return redirect()->route('login')->with('success', 'Profile updated. Please login again.');
+    }
+
+    public function audit_trail()
+    {
+        $trails = AuditTrail::paginate(10, ['*'], 'trails_page');
+        return view('maintenance.audit_trail', compact('trails'));
     }
 }

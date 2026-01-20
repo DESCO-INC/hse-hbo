@@ -190,7 +190,7 @@
                                         class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
                                         User Maintenance
                                     </a>
-                                    <a href=""
+                                    <a href="{{ route('maintenance.audit_trail') }}"
                                         class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
                                         Audit Trail
                                     </a>
