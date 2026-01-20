@@ -12,7 +12,7 @@ use App\Http\Controllers\OrganizationController;
 // Auth
 Route::get('/', [SessionController::class, 'index'])->name('login');
 Route::post('/login', [SessionController::class, 'store']);
-Route::post('/logout', [SessionController::class, 'destroy']);
+Route::post('/logout', [SessionController::class, 'destroy'])->name('logout');
 
 // Register
 Route::get('/register', [RegisterUserController::class, 'index'])->middleware('auth');
@@ -53,12 +53,22 @@ Route::controller(OrganizationController::class)->group(function () {
     Route::get('/org/business_unit/{business_unit}/companies', 'company')->name('org.business_unit.companies');
 });
 
-// Maintenance Routes
-Route::get('/maintenance', [MaintenanceController::class, 'index'])->name('maintenance.index');
-Route::post('/maintenance/store/bu', [MaintenanceController::class, 'storeBU'])->name('maintenance.bu.store');
-Route::post('/maintenance/store/company', [MaintenanceController::class, 'storeCompany'])->name('maintenance.company.store');
 
-Route::delete('/maintenance/user/{id}', [MaintenanceController::class, 'user_destroy'])->name('maintenance.user_destroy');
-Route::delete('/maintenance/bu/{id}', [MaintenanceController::class, 'bu_destroy'])->name('maintenance.bu_destroy');
-Route::delete('/maintenance/company/{id}', [MaintenanceController::class, 'company_destroy'])->name('maintenance.company_destroy');
+// Maintenance Routes
+Route::prefix('maintenance')->controller(MaintenanceController::class)->group(function ()  {
+    Route::get('/', 'index')->name('maintenance.index');
+    Route::post('/', 'store_user')->name('maintenance.store_user');
+    Route::delete('/user/{id}', 'destroy_user')->name('maintenance.destroy_user');
+    Route::post('/org', 'store_org')->name('maintenance.store_org');
+    Route::delete('/org/{id}', 'destroy_org')->name('maintenance.destroy_org');
+    Route::get('/profile', 'profile')->name('maintenance.profile');
+    Route::put('/profile', 'profile_update')->name('maintenance.profile_update');
+    
+});
+
+// Route::post('/maintenance/store/bu', [MaintenanceController::class, 'storeBU'])->name('maintenance.bu.store');
+// Route::post('/maintenance/store/company', [MaintenanceController::class, 'storeCompany'])->name('maintenance.company.store');
+
+// Route::delete('/maintenance/bu/{id}', [MaintenanceController::class, 'bu_destroy'])->name('maintenance.bu_destroy');
+// Route::delete('/maintenance/company/{id}', [MaintenanceController::class, 'company_destroy'])->name('maintenance.company_destroy');
 

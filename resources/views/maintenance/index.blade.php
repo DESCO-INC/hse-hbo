@@ -6,10 +6,11 @@
         <div class="px-6 py-5 border-b border-gray-200 flex items-center">
             <h1 class="text-xl font-semibold text-gray-800">User List</h1>
             <div class="flex-1"></div>
-            <a href="{{ url('/register') }}"
+            <button id="openAddUser"
                 class="inline-block px-4 py-2 bg-green-500 text-white rounded-md shadow hover:bg-green-600 transition font-medium ml-2">
                 Add User
-            </a>
+            </button>
+
         </div>
 
         <div class="px-6 py-5 overflow-x-auto">
@@ -17,11 +18,16 @@
                 <table class="w-full min-w-max border-collapse mb-5">
                     <thead class="bg-green-600">
                         <tr>
-                            <th class="px-4 py-3 text-left text-sm font-semibold text-white uppercase tracking-wide">#</th>
-                            <th class="px-4 py-3 text-left text-sm font-semibold text-white uppercase tracking-wide">Name</th>
-                            <th class="px-4 py-3 text-left text-sm font-semibold text-white uppercase tracking-wide">Email</th>
-                            <th class="px-4 py-3 text-left text-sm font-semibold text-white uppercase tracking-wide">Credential</th>
-                            <th class="px-4 py-3 text-center text-sm font-semibold text-white uppercase tracking-wide">Actions</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-white uppercase tracking-wide">#
+                            </th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-white uppercase tracking-wide">
+                                Name</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-white uppercase tracking-wide">
+                                Email</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-white uppercase tracking-wide">
+                                Credential</th>
+                            <th class="px-4 py-3 text-center text-sm font-semibold text-white uppercase tracking-wide">
+                                Actions</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
@@ -32,12 +38,12 @@
                                 <td class="px-4 py-3 text-sm text-gray-600">{{ $user->email }}</td>
                                 <td class="px-4 py-3 text-sm text-gray-600">{{ $user->credentials ?? 'N/A' }}</td>
                                 <td class="px-4 py-3 text-center">
-                                    <button type="button"
-                                        data-id="{{ $user->id }}"
-                                        data-type="user"
-                                        class="deleteBtn px-3 py-1.5 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition">
-                                        Delete
-                                    </button>
+                                    @if (Auth::user()->id != $user->id)
+                                        <button type="button" data-id="{{ $user->id }}" data-type="user"
+                                            class="deleteBtn px-3 py-1.5 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition">
+                                            Delete
+                                        </button>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach
@@ -49,137 +55,268 @@
         </div>
     </div>
 
-    {{-- ====================== DELETE CONFIRM MODAL ====================== --}}
-    <div id="delete-modal"
-        class="hidden fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-            <h2 class="text-xl font-semibold text-gray-800">Confirm Delete</h2>
-            <p class="mt-2 text-sm text-gray-600">Are you sure you want to delete this? This action cannot be undone.</p>
+    {{-- ====================== ORG LIST ====================== --}}
+    <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-5">
+        <div class="px-6 py-5 border-b border-gray-200 flex items-center">
+            <h1 class="text-xl font-semibold text-gray-800">Business Unit and Group List</h1>
+            <div class="flex-1"></div>
+            <button id="openAddOrg"
+                class="inline-block px-4 py-2 bg-green-500 text-white rounded-md shadow hover:bg-green-600 transition font-medium ml-2">
+                Add Items
+            </button>
+        </div>
 
-            <div class="mt-6 flex justify-end space-x-3">
-                <button type="button" id="cancelDelete"
-                    class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition">Cancel</button>
-                <button type="button" id="confirmDelete"
-                    class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition">Delete</button>
+        <div class="px-6 py-5 overflow-x-auto">
+            <div class="overflow-x-auto bg-white shadow rounded-lg border border-gray-200">
+                <table class="w-full min-w-max border-collapse mb-5">
+                    <thead class="bg-green-600">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-white uppercase tracking-wide">#
+                            </th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-white uppercase tracking-wide">
+                                Business Unit</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-white uppercase tracking-wide">
+                                Group</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-white uppercase tracking-wide">
+                                Date Added</th>
+                            <th class="px-4 py-3 text-center text-sm font-semibold text-white uppercase tracking-wide">
+                                Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @foreach ($orgs as $org)
+                            <tr class="hover:bg-gray-50 transition-colors duration-200">
+                                <td class="px-4 py-3 text-sm text-gray-600">{{ $org->id }}</td>
+                                <td class="px-4 py-3 text-sm text-gray-600">{{ $org->business_unit }}</td>
+                                <td class="px-4 py-3 text-sm text-gray-600">{{ $org->company_name }}</td>
+                                <td class="px-4 py-3 text-sm text-gray-600">{{ $org->created_at }}</td>
+                                <td class="px-4 py-3 text-center">
+                                    <button type="button" data-id="{{ $org->id }}" data-type="org"
+                                        class="deleteBtn px-3 py-1.5 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition">
+                                        Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+
+                {{ $orgs->links() }}
             </div>
         </div>
     </div>
 
-    {{-- ====================== ADD BUSINESS UNIT MODAL ====================== --}}
-    <div id="add-bu-modal"
+    {{-- ====================== ADD USER MODAL ====================== --}}
+    <div id="add-user-modal"
         class="hidden fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-            <h2 class="text-xl font-semibold text-gray-800">Add Business Unit</h2>
-            <p class="mt-2 text-sm text-gray-600">Enter the name of the new business unit.</p>
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Add User</h2>
 
-            <form id="add-bu-form" class="mt-4 space-y-4" method="POST" action="{{ route('maintenance.bu.store') }}">
+            <form id="addUserForm" method="POST" action="{{ route('maintenance.store_user') }}">
                 @csrf
-                <div>
-                    <label for="business_unit" class="block text-sm font-medium text-gray-700 mb-1">
-                        Business Unit Name
-                    </label>
-                    <input type="text" id="business_unit" name="business_unit"
-                        class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-green-500 focus:border-green-500"
-                        placeholder="e.g. Finance Department" required>
+
+                <div class="mb-2">
+                    <x-form-label>Name</x-form-label>
+                    <x-form-input id="name" name="name" placeholder="Jane Smith" required />
+                    <div class="text-red-500 text-sm mt-1" id="error-name"></div>
                 </div>
 
-                <div class="flex justify-end space-x-3 mt-6">
-                    <button type="button" id="cancelAddBU"
+                <div class="mb-2">
+                    <x-form-label>Email</x-form-label>
+                    <x-form-input id="email" name="email" placeholder="JaneSmith@gmail.com" required />
+                    <div class="text-red-500 text-sm mt-1" id="error-email"></div>
+                </div>
+
+                <div class="mb-2">
+                    <x-form-label>Business Unit</x-form-label>
+                    <x-form-select id="business_unit" name="business_unit" required>
+                        <option value="">Select Business Unit</option>
+                        @foreach ($business_unit as $bu)
+                            <option value="{{ $bu }}">{{ $bu }}</option>
+                        @endforeach
+                    </x-form-select>
+                    <div class="text-red-500 text-sm mt-1" id="error-business_unit"></div>
+                </div>
+
+                <div class="mb-2">
+                    <x-form-label>Credentials</x-form-label>
+                    <x-form-select id="credentials" name="credentials" required>
+                        <option value="">Select Credentials</option>
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                        <option value="superadmin">Super Admin</option>
+                    </x-form-select>
+                    <div class="text-red-500 text-sm mt-1" id="error-credentials"></div>
+                </div>
+
+                <div class="mb-2">
+                    <x-form-label>Password</x-form-label>
+                    <x-form-input type="password" id="password" name="password" required />
+                    <div class="text-red-500 text-sm mt-1" id="error-password"></div>
+                </div>
+
+                <div class="mb-4">
+                    <x-form-label>Confirm Password</x-form-label>
+                    <x-form-input type="password" id="password_confirmation" name="password_confirmation" required />
+                    <div class="text-red-500 text-sm mt-1" id="error-password_confirmation"></div>
+                </div>
+
+                <div class="flex justify-end space-x-2">
+                    <button type="button" id="cancelAddUser"
                         class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition">Cancel</button>
                     <button type="submit"
-                        class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">Add</button>
+                        class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition">Add
+                        User</button>
                 </div>
             </form>
         </div>
     </div>
 
-    {{-- ====================== ADD COMPANY MODAL ====================== --}}
-    <div id="add-company-modal"
+    {{-- DELETE CONFIRM MODAL --}}
+    <div id="delete-modal"
         class="hidden fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-            <h2 class="text-xl font-semibold text-gray-800">Add Company</h2>
-            <p class="mt-2 text-sm text-gray-600">Enter the name of the new company.</p>
+            <h2 class="text-xl font-semibold text-gray-800">Confirm Delete</h2>
+            <p class="mt-2 text-sm text-gray-600">
+                Are you sure you want to delete this? This action cannot be undone.
+            </p>
 
-            <form id="add-company-form" class="mt-4 space-y-4" method="POST" action="{{ route('maintenance.company.store') }}">
+            <div class="mt-6 flex justify-end space-x-3">
+                <button type="button" id="cancelDelete"
+                    class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition">Cancel</button>
+                <form id="deleteForm" method="POST">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit"
+                        class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition">
+                        Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- ====================== ADD ORG MODAL ====================== --}}
+    <div id="add-org-modal"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Add Business Unit / Group</h2>
+
+            <form id="addOrgForm" method="POST" action="{{ route('maintenance.store_org') }}">
                 @csrf
-                <div>
-                    <label for="company" class="block text-sm font-medium text-gray-700 mb-1">
-                        Company Name
-                    </label>
-                    <input type="text" id="company" name="company"
-                        class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-green-500 focus:border-green-500"
-                        placeholder="e.g. ABC Corporation" required>
+
+                <div class="mb-2">
+                    <x-form-label>Business Unit</x-form-label>
+                    <x-form-input id="org_business_unit" name="org_business_unit" placeholder="Enter Business Unit"
+                        required />
+                    <div class="text-red-500 text-sm mt-1" id="error-org_business_unit"></div>
                 </div>
 
-                <div class="flex justify-end space-x-3 mt-6">
-                    <button type="button" id="cancelAddCompany"
+                <div class="mb-2">
+                    <x-form-label>Group / Company Name</x-form-label>
+                    <x-form-input id="org_company_name" name="org_company_name" placeholder="Enter Group Name"
+                        required />
+                    <div class="text-red-500 text-sm mt-1" id="error-org_company_name"></div>
+                </div>
+
+                <div class="flex justify-end space-x-2 mt-4">
+                    <button type="button" id="cancelAddOrg"
                         class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition">Cancel</button>
                     <button type="submit"
-                        class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">Add</button>
+                        class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition">Add
+                        Org</button>
                 </div>
             </form>
         </div>
     </div>
 
-    {{-- ====================== SCRIPTS ====================== --}}
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const addUserModal = document.getElementById('add-user-modal');
+            const openAddUserBtn = document.getElementById('openAddUser');
+            const cancelAddUserBtn = document.getElementById('cancelAddUser');
+            const addUserForm = document.getElementById('addUserForm');
+
+            // Toggle modal with button (open/close)
+            openAddUserBtn.addEventListener('click', () => {
+                addUserModal.classList.toggle('hidden'); // <- toggle instead of remove
+            });
+
+            // Close modal and reset form
+            cancelAddUserBtn.addEventListener('click', () => {
+                addUserModal.classList.add('hidden');
+                addUserForm.reset();
+                clearErrors();
+            });
+
+            function clearErrors() {
+                ['name', 'email', 'business_unit', 'credentials', 'password', 'password_confirmation']
+                .forEach(field => {
+                    const errorEl = document.getElementById('error-' + field);
+                    if (errorEl) errorEl.textContent = '';
+                });
+            }
+        });
+    </script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const deleteModal = document.getElementById('delete-modal');
-            const cancelBtn = document.getElementById('cancelDelete');
-            const confirmBtn = document.getElementById('confirmDelete');
-            let selectedId = null;
-            let selectedType = null;
+            const cancelDeleteBtn = document.getElementById('cancelDelete');
+            const deleteForm = document.getElementById('deleteForm');
 
-            document.body.addEventListener('click', function(e) {
-                if (e.target.classList.contains('deleteBtn')) {
-                    selectedId = e.target.dataset.id;
-                    selectedType = e.target.dataset.type;
+            // Open delete modal when any delete button is clicked
+            document.querySelectorAll('.deleteBtn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const id = btn.dataset.id;
+                    const type = btn.dataset.type; // "user" or "org"
 
-                    const modalText = deleteModal.querySelector('p');
-                    modalText.textContent = `Are you sure you want to delete this ${selectedType}? This action cannot be undone.`;
+                    // Set form action dynamically based on type
+                    if (type === 'user') {
+                        deleteForm.action = `/maintenance/user/${id}`;
+                    } else if (type === 'org') {
+                        deleteForm.action = `/maintenance/org/${id}`;
+                    }
+
+                    // Show modal
                     deleteModal.classList.remove('hidden');
-                }
+                });
             });
 
-            cancelBtn.addEventListener('click', () => {
+            // Cancel button closes modal
+            cancelDeleteBtn.addEventListener('click', () => {
                 deleteModal.classList.add('hidden');
-                selectedId = null;
-                selectedType = null;
             });
-
-            confirmBtn.addEventListener('click', () => {
-                if (!selectedId || !selectedType) return;
-
-                let endpoint = '';
-                if (selectedType === 'user') endpoint = `/maintenance/user/${selectedId}`;
-                else if (selectedType === 'bu') endpoint = `/maintenance/bu/${selectedId}`;
-                else if (selectedType === 'company') endpoint = `/maintenance/company/${selectedId}`;
-
-                fetch(endpoint, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json',
-                    },
-                }).then(() => location.reload());
-            });
-        });
-
-        // Handle add modals
-        document.addEventListener('DOMContentLoaded', () => {
-            const addBUModal = document.getElementById('add-bu-modal');
-            const addCompanyModal = document.getElementById('add-company-modal');
-
-            const openAddBU = document.getElementById('openAddBU');
-            const cancelAddBU = document.getElementById('cancelAddBU');
-            const openAddCompany = document.getElementById('openAddCompany');
-            const cancelAddCompany = document.getElementById('cancelAddCompany');
-
-            openAddBU.addEventListener('click', () => addBUModal.classList.remove('hidden'));
-            cancelAddBU.addEventListener('click', () => addBUModal.classList.add('hidden'));
-
-            openAddCompany.addEventListener('click', () => addCompanyModal.classList.remove('hidden'));
-            cancelAddCompany.addEventListener('click', () => addCompanyModal.classList.add('hidden'));
         });
     </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const addOrgModal = document.getElementById('add-org-modal');
+            const openAddOrgBtn = document.getElementById('openAddOrg');
+            const cancelAddOrgBtn = document.getElementById('cancelAddOrg');
+            const addOrgForm = document.getElementById('addOrgForm');
+
+            // Open Add Org modal
+            openAddOrgBtn.addEventListener('click', () => {
+                addOrgModal.classList.remove('hidden');
+            });
+
+            // Close Add Org modal
+            cancelAddOrgBtn.addEventListener('click', () => {
+                addOrgModal.classList.add('hidden');
+                addOrgForm.reset();
+                clearOrgErrors();
+            });
+
+            function clearOrgErrors() {
+                ['org_business_unit', 'org_company_name'].forEach(field => {
+                    const errorEl = document.getElementById('error-' + field);
+                    if (errorEl) errorEl.textContent = '';
+                });
+            }
+        });
+    </script>
+
+
 </x-layout>

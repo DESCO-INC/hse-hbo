@@ -4,21 +4,44 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 
 use App\Models\User;
+use App\Models\Organization;
 
 class MaintenanceController extends Controller
 {
     public function index(Request $request)
     {
-        // Give each pagination its own query parameter name
         $users = User::paginate(5, ['*'], 'users_page');
-
-        return view('maintenance.index', compact('users'));
+        $orgs = Organization::paginate(10, ['*'], 'orgs_page');
+        $business_unit = Organization::distinct()->pluck('business_unit');
+        return view('maintenance.index', compact('users', 'orgs', 'business_unit'));
     }
 
+    public function store_user(Request $request)
+    {
+        // Validate request
+        $attributes = $request->validate([
+            'name' => ['required', Rule::unique('users', 'name')],
+            'email' => ['required', 'email', Rule::unique('users', 'email')],
+            'business_unit' => ['required'],
+            'credentials' => ['required'],
+            'password' => ['required', Password::min(5), 'confirmed'], // password_confirmation
+        ]);
 
-    public function user_destroy($id)
+        // Hash password before saving
+        $attributes['password'] = bcrypt($attributes['password']);
+
+        // Create user
+        $user = User::create($attributes);
+
+        return redirect()->route('maintenance.index')->with('success', 'User Added Successfully');
+    }
+
+    public function destroy_user($id)
     {
         $user = User::findOrFail($id);
         $user->delete();
@@ -26,52 +49,57 @@ class MaintenanceController extends Controller
         return redirect()->route('maintenance.index')->with('success', 'User record deleted successfully.');
     }
 
-    public function storeBU(Request $request)
+    public function store_org(Request $request)
     {
-        $request->validate([
-            'business_unit' => 'required|string|max:255',
+        // Validate request
+        $attributes = $request->validate([
+            'org_business_unit' => ['required', 'string'],
+            'org_company_name' => ['required', 'string'],
         ]);
 
-        BusinessUnit::create([
-            'business_unit' => $request->business_unit,
-            'created_by' => auth()->user()->name ?? 'System',
+        // Map validated fields to table columns
+        $org = Organization::create([
+            'business_unit' => $attributes['org_business_unit'],
+            'company_name' => $attributes['org_company_name'],
         ]);
 
-        return redirect()->route('maintenance.index')
-            ->with('success', 'Business Unit added successfully.');
-    }
-    
-
-    public function storeCompany(Request $request)
-    {
-        $request->validate([
-            'company' => 'required|string|max:255',
-        ]);
-
-        Company::create([
-            'company' => $request->company,
-            'created_by' => auth()->user()->name ?? 'System',
-        ]);
-
-        return redirect()->route('maintenance.index')
-            ->with('success', 'Company added successfully.');
+        return redirect()->route('maintenance.index')->with('success', 'Item Added Successfully');
     }
 
-
-    public function bu_destroy($id)
+    public function destroy_org($id)
     {
-        $business_unit = BusinessUnit::findOrFail($id);
-        $business_unit->delete();
+        $org = Organization::findOrFail($id);
+        $org->delete();
 
-        return redirect()->route('maintenance.index')->with('success', 'Business Unit record deleted successfully.');
+        return redirect()->route('maintenance.index')->with('success', 'Item record deleted successfully.');
     }
-    
 
-    public function company_destroy($id)
+    public function profile()
     {
-        $company = Company::findOrFail($id);
-        $company->delete();
+        return view('maintenance.profile');
+    }
 
-        return redirect()->route('maintenance.index')->with('success', 'Company record deleted successfully.');
+    public function profile_update(Request $request)
+    {
+        $user = auth()->user();
+
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'credentials' => 'required|string',
+            'password' => 'nullable|confirmed|min:8',
+        ]);
+
+        if (empty($data['password'])) {
+            unset($data['password']); // Don't update password if blank
+        } else {
+            $data['password'] = bcrypt($data['password']);
+        }
+
+        $user->update($data);
+
+        Auth::logout();
+
+        return redirect()->route('login')->with('success', 'Profile updated. Please login again.');
     }
 }

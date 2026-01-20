@@ -190,6 +190,10 @@
                                         class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
                                         User Maintenance
                                     </a>
+                                    <a href=""
+                                        class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                                        Audit Trail
+                                    </a>
                                 </div>
                             </div>
                         @endauth
@@ -224,12 +228,10 @@
                             <!-- Dropdown Menu (same width, right-aligned, below button) -->
                             <div id="profileDropdownMenu"
                                 class="hidden absolute top-full right-0 mt-2 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-hidden z-50">
-                                @if (Auth::user()->credentials === 'superadmin')
-                                    <a href="{{ route('maintenance.index') }}"
-                                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-green-50 text-right">
-                                        System Maintenance
-                                    </a>
-                                @endif
+                                <a href="{{ route('maintenance.profile') }}"
+                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-green-50 text-right">
+                                    Profile
+                                </a>
 
                                 <button type="button"
                                     class="w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600"
