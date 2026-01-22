@@ -214,7 +214,7 @@
         <div class="col-span-4 row-span-2 row-start-14">
             <div
                 class="bg-white rounded-lg shadow-sm border p-5 hover:shadow-md transition-shadow duration-200 flex flex-col justify-center">
-                <h2 class="text-lg font-semibold text-gray-800 mb-3">Weekly Summary</h2>
+                <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-6">Weekly Summary</h2>
 
                 <div class="overflow-x-auto">
                     <table class="min-w-full border border-gray-200 text-xs text-center">
@@ -269,12 +269,6 @@
                                 <td class="py-1 px-2 border"><span id="thisSun">0</span></td>
                                 <td class="py-1 px-2 border font-medium text-gray-800 bg-gray-50"><span
                                         id="thisTotal">0</span></td>
-                            </tr>
-
-                            <tr class="font-semibold bg-gray-100">
-                                <td class="py-1 px-2 border text-left">Grand Total</td>
-                                <td class="py-1 px-2 border" colspan="7"></td>
-                                <td class="py-1 px-2 border text-gray-900"><span id="grandTotal">0</span></td>
                             </tr>
                         </tbody>
                     </table>
@@ -497,8 +491,6 @@
                     data: filters,
                     success: function(response) {
                         if (!response.weekly_summary || !response.weekly_summary.length) return;
-
-                        let grandTotal = 0;
                         response.weekly_summary.forEach(item => {
                             let prefix = '';
                             switch (item.week_label) {
@@ -535,10 +527,7 @@
                                 item.wed || 0) + (item.thu || 0) + (item.fri || 0) + (
                                 item.sat || 0) + (item.sun || 0));
                             $(`#${prefix}Total`).text(total);
-                            grandTotal += total;
                         });
-
-                        $('#grandTotal').text(grandTotal);
                     },
                     error: function(xhr, status, error) {
                         console.error("Error loading weekly summary:", error);
