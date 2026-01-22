@@ -88,7 +88,7 @@ class MaintenanceController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
             'credentials' => 'required|string',
-            'password' => 'nullable|confirmed|min:8',
+            'password' => 'nullable|confirmed|min:5',
         ]);
 
         if (empty($data['password'])) {

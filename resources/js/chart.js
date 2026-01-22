@@ -65,9 +65,21 @@ function initHboByDateChart() {
         legend: { show: false },
         colors: ["#22c55e"],
         tooltip: {
-            x: { format: "MMM dd, yyyy" }, // 🔹 show full date on hover
-            y: { formatter: (val) => `${val} reports` },
-        },
+            x: {
+                formatter: function (_, opts) {
+                    const point = opts.w.config.series[0].data[opts.dataPointIndex];
+                    return new Date(point.rawDate).toLocaleDateString("en-US", {
+                        month: "long",
+                        day: "numeric",
+                        year: "numeric"
+                    });
+                }
+            },
+            y: {
+                formatter: val => `${val} reports`
+            }
+        }
+
     };
 
     window.hboCharts.byDate = new ApexCharts(el, options);
@@ -79,8 +91,9 @@ window.updateHboByDateChart = function (byDate) {
 
     // Map series as { x: date, y: total }
     const seriesData = byDate.map(item => ({
-        x: item.day,         // the date for the x-axis
-        y: item.total ?? 0   // the total for y
+        x: item.day,            // used by x-axis
+        y: item.total ?? 0,     // y-axis value
+        rawDate: item.day       // 👈 raw/full date (extra field)
     }));
 
     window.hboCharts.byDate.updateSeries([{
@@ -99,7 +112,10 @@ window.updateHboByDateChart = function (byDate) {
                 formatter: function (val, timestamp, index) {
                     const date = new Date(val);
                     if (date.getDate() === 1 || index === 0) {
-                        return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+                        return date.toLocaleDateString("en-US", {
+                            month: "short",
+                            year: "numeric"
+                        });
                     }
                     return "";
                 }
@@ -152,18 +168,21 @@ function initHboByCategoryChart() {
             bar: {
                 horizontal: false,
                 borderRadius: 4,
-                columnWidth: "70%", // 🔹 wider bars
-                dataLabels: { position: "top" },
-            },
+                columnWidth: "70%",
+                dataLabels: {
+                    position: "top" // required
+                }
+            }
         },
         dataLabels: {
             enabled: true,
             formatter: (val) => val.toLocaleString(),
+            offsetY: -14, // ⬅️ pushes label OUTSIDE above the bar
             style: {
                 fontSize: "10px",
                 fontWeight: "600",
-                colors: ["#ffffff"],
-            },
+                colors: ["#000000"] // ✅ black text
+            }
         },
         grid: {
             borderColor: "#e5e7eb",
@@ -288,6 +307,10 @@ function initHboByCompanyChart() {
                             fontSize: "12px",
                             fontWeight: 600,
                             color: "#374151",
+                            formatter: function (w) {
+                                const total = w.globals.seriesTotals.reduce((a, b) => a + b, 0);
+                                return total.toLocaleString(); // ✅ adds comma separators
+                            }
                         },
                     },
                 },
@@ -494,22 +517,26 @@ function initHboBySubcategoryChart() {
                 },
             },
         },
+
         plotOptions: {
             bar: {
                 horizontal: false,
                 borderRadius: 4,
                 columnWidth: "70%",
-                dataLabels: { position: "top" },
-            },
+                dataLabels: {
+                    position: "top" // required
+                }
+            }
         },
         dataLabels: {
             enabled: true,
             formatter: (val) => val.toLocaleString(),
+            offsetY: -14, // ⬅️ pushes label OUTSIDE above the bar
             style: {
                 fontSize: "10px",
                 fontWeight: "600",
-                colors: ["#ffffff"],
-            },
+                colors: ["#000000"] // ✅ black text
+            }
         },
         // 🔹 Removed the hard-coded colors array
         grid: {
@@ -773,8 +800,6 @@ function initHboVsPobWeeklyChart() {
     };
 }
 
-
-
 // ✅ HBO By Week Chart (Line)
 function initHboByWeekChart() {
     const el = document.querySelector("#hbo-weekly-chart");
@@ -828,7 +853,12 @@ function initHboByWeekChart() {
         dataLabels: { enabled: false },
         legend: { show: false },
         tooltip: {
-            y: { formatter: (val) => `${val} reports` },
+            x: {
+                formatter: (val) => `Work Week ${val}`,
+            },
+            y: {
+                formatter: (val) => `${val} reports`,
+            },
         },
     };
 

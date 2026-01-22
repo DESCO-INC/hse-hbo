@@ -6,7 +6,8 @@
     @endphp
 
     <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100">
-        <form id="profileForm" method="POST" action="{{ route('maintenance.profile_update') }}" class="px-6 py-8 grid grid-cols-4 gap-5">
+        <form id="profileForm" method="POST" action="{{ route('maintenance.profile_update') }}"
+            class="px-6 py-8 grid grid-cols-4 gap-5">
             @csrf
             @method('PUT')
 
@@ -38,13 +39,13 @@
                 <div>
                     <x-form-label for="name">Name</x-form-label>
                     <input type="text" id="name" name="name" value="{{ auth()->user()->name }}"
-                        class="border border-gray-300 rounded-md px-3 py-2 w-full" {{ $editing ? '' : 'readonly' }} />
+                        class="border border-gray-300 rounded-md px-3 py-2 w-full" {{ $editing ? '' : 'readonly' }} required/>
                 </div>
 
                 <div>
                     <x-form-label for="email">Email</x-form-label>
                     <input type="email" id="email" name="email" value="{{ auth()->user()->email }}"
-                        class="border border-gray-300 rounded-md px-3 py-2 w-full" {{ $editing ? '' : 'readonly' }} />
+                        class="border border-gray-300 rounded-md px-3 py-2 w-full" {{ $editing ? '' : 'readonly' }} required/>
                 </div>
 
                 <div>
@@ -52,9 +53,12 @@
                     <select name="credentials" id="credentials"
                         class="border border-gray-300 rounded-md px-3 py-2 text-sm text-black-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 w-full"
                         {{ $editing ? '' : 'disabled' }}>
-                        <option value="superadmin" {{ Auth::user()->credentials == 'superadmin' ? 'selected' : '' }}>SUPER ADMIN</option>
-                        <option value="admin" {{ Auth::user()->credentials == 'admin' ? 'selected' : '' }}>ADMIN</option>
-                        <option value="staff" {{ Auth::user()->credentials == 'staff' ? 'selected' : '' }}>STAFF</option>
+                        <option value="superadmin" {{ Auth::user()->credentials == 'superadmin' ? 'selected' : '' }}>
+                            SUPER ADMIN</option>
+                        <option value="admin" {{ Auth::user()->credentials == 'admin' ? 'selected' : '' }}>ADMIN
+                        </option>
+                        <option value="staff" {{ Auth::user()->credentials == 'staff' ? 'selected' : '' }}>STAFF
+                        </option>
                     </select>
                 </div>
 
@@ -65,11 +69,13 @@
                             <x-form-label for="password">New Password</x-form-label>
                             <x-form-input id="password" name="password" type="password"
                                 placeholder="Leave blank to keep current password" />
+                            <x-form-error name='password' />
                         </div>
                         <div>
                             <x-form-label for="password_confirmation">Confirm Password</x-form-label>
                             <x-form-input id="password_confirmation" name="password_confirmation" type="password"
                                 placeholder="Leave blank to keep current password" />
+                            <x-form-error name='password_confirmation' />
                         </div>
                     </div>
 
@@ -99,9 +105,8 @@
                     Cancel
                 </button>
 
-                <button type="button" 
-                    class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition"
-                    onclick="document.getElementById('profileForm').submit();">
+                <button type="button" id="confirmSaveBtn"
+                    class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">
                     Proceed
                 </button>
             </div>
@@ -112,6 +117,10 @@
     <script>
         document.getElementById('saveBtn')?.addEventListener('click', function() {
             document.getElementById('save-modal').classList.remove('hidden');
+        });
+
+        document.getElementById('confirmSaveBtn')?.addEventListener('click', function() {
+            document.getElementById('profileForm').submit();
         });
     </script>
 </x-layout>

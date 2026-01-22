@@ -113,7 +113,7 @@
                 class="h-full col-span-1 bg-white rounded-lg shadow-md border p-6 hover:shadow-lg transition-shadow duration-200">
                 <div class="flex h-full items-center justify-between">
                     <div class="flex-1 h-full">
-                        <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">HBO submitted by Date</p>
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">HBO submitted by Date</p>
                         <div id="hbo-by-date-chart" class="w-full h-full"></div>
                     </div>
                 </div>
@@ -125,7 +125,7 @@
                 class="h-full col-span-1 bg-white rounded-lg shadow-md border p-6 hover:shadow-lg transition-shadow duration-200">
                 <div class="flex h-full items-center justify-between">
                     <div class="flex-1 h-full">
-                        <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">HBO Reported by Category
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">HBO Reported by Category
                         </p>
                         <div id="hbo-by-category-chart" class="w-full h-full"></div>
                     </div>
@@ -136,7 +136,7 @@
         <div class="row-span-3 row-start-5 col-span-2">
             <div
                 class="bg-white rounded-lg shadow-md border p-6 hover:shadow-lg transition-shadow duration-200 flex flex-col h-full">
-                <p class="text-xs font-medium text-gray-600 uppercase tracking-wide mb-4">HBO Submission by Group</p>
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">HBO Submission by Group</p>
                 <!-- Chart container -->
                 <div class="flex-1 relative">
                     <div id="hbo-submitted-by-company-chart" class="absolute inset-0"></div>
@@ -148,7 +148,7 @@
         <div class="col-span-2 row-span-3 row-start-8">
             <div
                 class="bg-white rounded-lg shadow-md border p-6 hover:shadow-lg transition-shadow duration-200 flex flex-col h-full">
-                <p class="text-xs font-medium text-gray-600 uppercase tracking-wide mb-4">HBO Submission by Type</p>
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">HBO Submission by Type</p>
                 <!-- Chart container -->
                 <div class="flex-1 relative">
                     <div id="hbo-submitted-by-type-chart" class="absolute inset-0"></div>
@@ -161,7 +161,7 @@
                 class="h-full col-span-1 bg-white rounded-lg shadow-md border p-6 hover:shadow-lg transition-shadow duration-200">
                 <div class="flex h-full items-center justify-between">
                     <div class="flex-1 h-full">
-                        <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">HBO Reported by
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">HBO Reported by
                             Sub-Category</p>
                         <div id="hbo-by-subcategory-chart" class="w-full h-full"></div>
                     </div>
@@ -174,8 +174,7 @@
                 class="h-full col-span-1 bg-white rounded-lg shadow-md border p-6 hover:shadow-lg transition-shadow duration-200">
                 <div class="flex h-full items-center justify-between">
                     <div class="flex-1 h-full">
-                        <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">HBO submitted by Date
-                            (WEEKLY)</p>
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">HBO submitted by Date (WEEKLY)</p>
                         <div id="hbo-weekly-chart" class="w-full h-full"></div>
                     </div>
                 </div>
@@ -186,7 +185,7 @@
         <div class="row-span-2 row-start-11">
             <div
                 class="bg-white rounded-lg shadow-md border p-6 hover:shadow-lg transition-shadow duration-200 flex flex-col h-full">
-                <p class="text-xs font-medium text-gray-600 uppercase tracking-wide mb-2">
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                     Top 5 Reporters for <br> <span id="ranking-date-range"></span>
                 </p>
                 <div class="flex-1 relative">
@@ -200,7 +199,7 @@
             <div
                 class="bg-white rounded-lg shadow-md border p-6 hover:shadow-lg transition-shadow duration-200 flex flex-col h-full">
 
-                <p class="text-xs font-medium text-gray-600 uppercase tracking-wide mb-4">
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                     Total Number of Reporters
                 </p>
 
@@ -457,7 +456,7 @@
                             const dateRange = response.report_ranking.date_filter;
                             $("#ranking-date-range").text(
                                 `[${new Date(dateRange.from).toLocaleDateString()} to ${new Date(dateRange.to).toLocaleDateString()}]`
-                                );
+                            );
                             let html = '';
                             data.forEach((item, index) => {
                                 const crown = index === 0 ? ' 🜲' : '';
