@@ -110,7 +110,7 @@ class MaintenanceController extends Controller
 
     public function audit_trail()
     {
-        $trails = AuditTrail::paginate(10, ['*'], 'trails_page');
+        $trails = AuditTrail::orderBy('id', 'desc')->paginate(10, ['*'], 'trails_page');
         return view('maintenance.audit_trail', compact('trails'));
     }
 }
