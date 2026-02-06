@@ -148,7 +148,7 @@
                     <x-form-label>Credentials</x-form-label>
                     <x-form-select id="credentials" name="credentials" required>
                         <option value="">Select Credentials</option>
-                        <option value="USER">User</option>
+                        <option value="STAFF">Staff</option>
                         <option value="ADMIN">Admin</option>
                         <option value="SUPER_ADMIN">Super Admin</option>
                     </x-form-select>

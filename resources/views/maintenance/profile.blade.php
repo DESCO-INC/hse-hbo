@@ -55,9 +55,9 @@
                         {{ $editing ? '' : 'disabled' }}>
                         <option value="SUPER_ADMIN" {{ Auth::user()->credentials == 'SUPER_ADMIN' ? 'selected' : '' }}>
                             SUPER ADMIN</option>
-                        <option value="admin" {{ Auth::user()->credentials == 'admin' ? 'selected' : '' }}>ADMIN
+                        <option value="ADMIN" {{ Auth::user()->credentials == 'ADMIN' ? 'selected' : '' }}>ADMIN
                         </option>
-                        <option value="staff" {{ Auth::user()->credentials == 'staff' ? 'selected' : '' }}>STAFF
+                        <option value="STAFF" {{ Auth::user()->credentials == 'STAFF' ? 'selected' : '' }}>STAFF
                         </option>
                     </select>
                 </div>
