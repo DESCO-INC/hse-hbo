@@ -16,25 +16,21 @@ class SessionController extends Controller
         }
 
         // Return login view for guests
-        return response()
-            ->view('auth.login')
-            ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
-            ->header('Pragma', 'no-cache')
-            ->header('Expires', '0'); // prevent browser from caching login
+        return response()->view('auth.login')->header('Cache-Control', 'no-cache, no-store, must-revalidate')->header('Pragma', 'no-cache')->header('Expires', '0'); // prevent browser from caching login
     }
 
     public function store()
     {
         // validate
         $attributes = request()->validate([
-            'email' => ['required','email'],
-            'password' => ['required']
+            'email' => ['required', 'email'],
+            'password' => ['required'],
         ]);
 
         // attempt login;
-        if(! Auth::attempt($attributes)) {
+        if (!Auth::attempt($attributes)) {
             throw ValidationException::withMessages([
-                'email' => 'Email or Password is incorrect please try again.'
+                'email' => 'Email or Password is incorrect please try again.',
             ]);
         }
 
@@ -48,7 +44,6 @@ class SessionController extends Controller
     public function destroy()
     {
         Auth::logout();
-
         return redirect('/');
     }
 }

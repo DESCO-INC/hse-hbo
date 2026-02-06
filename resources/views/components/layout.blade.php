@@ -257,9 +257,9 @@
                                         Cancel
                                     </button>
 
-                                    <form method="POST" action="{{ url('/logout') }}">
+                                    <form id="logout-form" method="POST" action="{{ url('/logout') }}">
                                         @csrf
-                                        <button type="submit"
+                                        <button type="button" id="logout-button"
                                             class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition">
                                             Log out
                                         </button>
@@ -267,47 +267,47 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Mobile Menu Button -->
+                        <div class="md:hidden">
+                            <button type="button"
+                                onclick="document.getElementById('mobile-menu').classList.toggle('hidden')"
+                                class="text-white hover:text-green-100 focus:outline-none p-2">
+                                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 6h16M4 12h16M4 18h16" />
+                                </svg>
+                            </button>
+                        </div>
                     @endauth
                 </div>
 
+                <!-- Mobile Menu -->
+                <div id="mobile-menu" class="hidden md:hidden bg-green-600/95">
+                    <div class="px-2 pt-2 pb-3 space-y-1">
+                        @auth
+                            <x-nav-link href="{{ route('hbo.index') }}" :active="request()->routeIs('hbo.index')"
+                                class="block text-white hover:bg-green-700 rounded-md">
+                                HBO Dashboard
+                            </x-nav-link>
+                            <x-nav-link href="{{ route('hbo.list') }}" :active="request()->routeIs('hbo.list')"
+                                class="block text-white hover:bg-green-700 rounded-md">
+                                HBO List
+                            </x-nav-link>
+                        @endauth
 
-                <!-- Mobile Menu Button -->
-                <div class="md:hidden">
-                    <button type="button" onclick="document.getElementById('mobile-menu').classList.toggle('hidden')"
-                        class="text-white hover:text-green-100 focus:outline-none p-2">
-                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
-                    </button>
+                        @guest
+                            <a href="{{ url('/') }}"
+                                class="block px-3 py-2 text-white hover:bg-green-700 rounded-md">
+                                Login
+                            </a>
+                            <a href="{{ url('/register') }}"
+                                class="block px-3 py-2 text-white hover:bg-green-700 rounded-md">
+                                Register
+                            </a>
+                        @endguest
+                    </div>
                 </div>
-            </div>
-        </div>
-
-        <!-- Mobile Menu -->
-        <div id="mobile-menu" class="hidden md:hidden bg-green-600/95">
-            <div class="px-2 pt-2 pb-3 space-y-1">
-                @auth
-                    <x-nav-link href="{{ route('hbo.index') }}" :active="request()->routeIs('hbo.index')"
-                        class="block text-white hover:bg-green-700 rounded-md">
-                        HBO Dashboard
-                    </x-nav-link>
-                    <x-nav-link href="{{ route('hbo.list') }}" :active="request()->routeIs('hbo.list')"
-                        class="block text-white hover:bg-green-700 rounded-md">
-                        HBO List
-                    </x-nav-link>
-                @endauth
-
-                @guest
-                    <a href="{{ url('/') }}" class="block px-3 py-2 text-white hover:bg-green-700 rounded-md">
-                        Login
-                    </a>
-                    <a href="{{ url('/register') }}" class="block px-3 py-2 text-white hover:bg-green-700 rounded-md">
-                        Register
-                    </a>
-                @endguest
-            </div>
-        </div>
     </nav>
 
 
@@ -376,7 +376,16 @@
         });
     </script>
 
+    <script>
+        document.getElementById('logout-button').addEventListener('click', function() {
+            // Clear all local storage
+            localStorage.clear();
+            sessionStorage.clear(); // optional, if you want to clear sessionStorage too
 
+            // Submit the form to logout
+            document.getElementById('logout-form').submit();
+        });
+    </script>
 </body>
 
 </html>
