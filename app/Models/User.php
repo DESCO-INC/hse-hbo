@@ -12,6 +12,7 @@ class User extends Authenticatable
 {
     use Auditable;
     use HasFactory, Notifiable;
+    protected $connection = 'admin';
 
     /**
      * The attributes that are mass assignable.

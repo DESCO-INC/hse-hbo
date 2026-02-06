@@ -21,8 +21,8 @@
                     <x-form-label for="business_unit">Business Unit</x-form-label>
 
                     <x-form-select name="business_unit" id="business_unit" required
-                        class="{{ Auth::user()->credentials != 'superadmin' ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : '' }}">
-                        @if (Auth::user()->credentials == 'superadmin')
+                        class="{{ Auth::user()->credentials != 'SUPER_ADMIN' ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : '' }}">
+                        @if (Auth::user()->credentials == 'SUPER_ADMIN')
                             <option value="" selected>Select Business Unit</option>
                             @foreach ($business_unit as $bu)
                                 <option value="{{ $bu->business_unit }}">{{ $bu->business_unit }}</option>
@@ -38,7 +38,7 @@
                     </x-form-select>
 
                     {{-- Overlay to lock the dropdown for normal users --}}
-                    @if (Auth::user()->credentials != 'superadmin')
+                    @if (Auth::user()->credentials != 'SUPER_ADMIN')
                         <div class="absolute inset-0 bg-transparent cursor-not-allowed"></div>
                         {{-- Hidden field so the locked value still submits --}}
                         <input type="hidden" name="business_unit" value="{{ Auth::user()->business_unit }}">

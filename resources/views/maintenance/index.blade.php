@@ -118,13 +118,17 @@
                 <div class="mb-2">
                     <x-form-label>Name</x-form-label>
                     <x-form-input id="name" name="name" placeholder="Jane Smith" required />
-                    <div class="text-red-500 text-sm mt-1" id="error-name"></div>
+                    @error('name')
+                        <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 <div class="mb-2">
                     <x-form-label>Email</x-form-label>
                     <x-form-input id="email" name="email" placeholder="JaneSmith@gmail.com" required />
-                    <div class="text-red-500 text-sm mt-1" id="error-email"></div>
+                    @error('email')
+                        <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 <div class="mb-2">
@@ -135,30 +139,38 @@
                             <option value="{{ $bu }}">{{ $bu }}</option>
                         @endforeach
                     </x-form-select>
-                    <div class="text-red-500 text-sm mt-1" id="error-business_unit"></div>
+                    @error('business_unit')
+                        <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 <div class="mb-2">
                     <x-form-label>Credentials</x-form-label>
                     <x-form-select id="credentials" name="credentials" required>
                         <option value="">Select Credentials</option>
-                        <option value="user">User</option>
-                        <option value="admin">Admin</option>
-                        <option value="superadmin">Super Admin</option>
+                        <option value="USER">User</option>
+                        <option value="ADMIN">Admin</option>
+                        <option value="SUPER_ADMIN">Super Admin</option>
                     </x-form-select>
-                    <div class="text-red-500 text-sm mt-1" id="error-credentials"></div>
+                    @error('credentials')
+                        <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 <div class="mb-2">
                     <x-form-label>Password</x-form-label>
                     <x-form-input type="password" id="password" name="password" required />
-                    <div class="text-red-500 text-sm mt-1" id="error-password"></div>
+                    @error('password')
+                        <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 <div class="mb-4">
                     <x-form-label>Confirm Password</x-form-label>
                     <x-form-input type="password" id="password_confirmation" name="password_confirmation" required />
-                    <div class="text-red-500 text-sm mt-1" id="error-password_confirmation"></div>
+                    @error('password_confirmation')
+                        <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 <div class="flex justify-end space-x-2">
@@ -171,6 +183,13 @@
             </form>
         </div>
     </div>
+
+    @if ($errors->any())
+        <script>
+            document.getElementById('add-user-modal')?.classList.remove('hidden');
+        </script>
+    @endif
+
 
     {{-- DELETE CONFIRM MODAL --}}
     <div id="delete-modal"

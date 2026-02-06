@@ -53,7 +53,7 @@
                     <select name="credentials" id="credentials"
                         class="border border-gray-300 rounded-md px-3 py-2 text-sm text-black-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 w-full"
                         {{ $editing ? '' : 'disabled' }}>
-                        <option value="superadmin" {{ Auth::user()->credentials == 'superadmin' ? 'selected' : '' }}>
+                        <option value="SUPER_ADMIN" {{ Auth::user()->credentials == 'SUPER_ADMIN' ? 'selected' : '' }}>
                             SUPER ADMIN</option>
                         <option value="admin" {{ Auth::user()->credentials == 'admin' ? 'selected' : '' }}>ADMIN
                         </option>

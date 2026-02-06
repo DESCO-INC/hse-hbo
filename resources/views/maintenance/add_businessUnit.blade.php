@@ -44,9 +44,9 @@
                 <x-form-label for="credentials">Credentials</x-form-label>
                   <x-form-select name="credentials" id="credentials" required class="text-gray-500">
                     <option value="">Select Credentials</option>
-                    <option value="user">User</option>
-                    <option value="admin">Admin</option>
-                    <option value="superadmin">super Admin</option>
+                    <option value="USER">User</option>
+                    <option value="ADMIN">Admin</option>
+                    <option value="SUPER_ADMIN">super Admin</option>
                   </x-form-select>
                 <x-form-error name="credentials" />
               </div>

@@ -26,7 +26,7 @@
                     <x-form-label for="business_unit">Business Unit</x-form-label>
 
                     <x-form-select name="business_unit" id="business_unit" required
-                        class="{{ Auth::user()->credentials != 'superadmin' ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : '' }}"
+                        class="{{ Auth::user()->credentials != 'SUPER_ADMIN' ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : '' }}"
                         disabled>
                         <option value="">Select Business Unit</option>
                         <!-- Options populated by JS -->
@@ -338,7 +338,7 @@
                         // Pre-select current BU
                         if (bu === currentBU) option.selected = true;
 
-                        @if (Auth::user()->credentials != 'superadmin')
+                        @if (Auth::user()->credentials != 'SUPER_ADMIN')
                             if (bu === "{{ Auth::user()->business_unit }}") option.selected = true;
                         @endif
 
@@ -413,8 +413,8 @@
             originalValues = Array.from(inputs).map(i => i.value);
 
             inputs.forEach(i => {
-                // If user is NOT superadmin and field is business_unit, keep it disabled
-                if (i.id === 'business_unit' && "{{ Auth::user()->credentials }}" !== 'superadmin') {
+                // If user is NOT SUPER_ADMIN and field is business_unit, keep it disabled
+                if (i.id === 'business_unit' && "{{ Auth::user()->credentials }}" !== 'SUPER_ADMIN') {
                     i.disabled = true;
                 } else {
                     i.disabled = false;

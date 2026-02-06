@@ -373,7 +373,7 @@
                                 option.value = bu;
                                 option.textContent = bu;
                                 if (bu === filters.business_unit) option.selected = true;
-                                @if (Auth::user()->credentials != 'superadmin')
+                                @if (Auth::user()->credentials != 'SUPER_ADMIN')
                                     if (bu === "{{ Auth::user()->business_unit }}") option.selected = true;
                                 @endif
                                 businessUnitSelect.appendChild(option);

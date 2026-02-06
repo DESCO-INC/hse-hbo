@@ -44,7 +44,7 @@ return new class extends Migration
             'email' => 'jcmatucad@desco.ph',
             'password' => Hash::make('admin'), // You can change this later
             'business_unit' => 'PIONEER1',
-            'credentials' => 'superadmin',
+            'credentials' => 'SUPER_ADMIN',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -55,7 +55,7 @@ return new class extends Migration
             'email' => 'cverde@desco.ph',
             'password' => Hash::make('admin'), // You can change this later
             'business_unit' => 'PIONEER1',
-            'credentials' => 'superadmin',
+            'credentials' => 'SUPER_ADMIN',
             'created_at' => now(),
             'updated_at' => now(),
         ]);

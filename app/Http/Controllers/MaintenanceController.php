@@ -26,11 +26,15 @@ class MaintenanceController extends Controller
     {
         // Validate request
         $attributes = $request->validate([
-            'name' => ['required', Rule::unique('users', 'name')],
-            'email' => ['required', 'email', Rule::unique('users', 'email')],
+            'name' => ['required', 'string'],
+            'email' => [
+                'required',
+                'email',
+                Rule::unique('admin.users', 'email'), // 👈 IMPORTANT
+            ],
             'business_unit' => ['required'],
             'credentials' => ['required'],
-            'password' => ['required', Password::min(5), 'confirmed'], // password_confirmation
+            'password' => ['required', Password::min(5), 'confirmed'],
         ]);
 
         // Hash password before saving

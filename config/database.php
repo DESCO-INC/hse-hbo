@@ -63,6 +63,28 @@ return [
             ]) : [],
         ],
 
+        'hbo' => [
+            'driver' => 'mysql',
+            'host' => env('DB_HOST'),
+            'port' => env('DB_PORT'),
+            'database' => env('DB_DATABASE'),
+            'username' => env('DB_USERNAME'),
+            'password' => env('DB_PASSWORD'),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+        ],
+        
+        'admin' => [
+            'driver' => 'mysql',
+            'host' => env('DB_USERS_HOST'),
+            'port' => env('DB_USERS_PORT'),
+            'database' => env('DB_USERS_DATABASE'),
+            'username' => env('DB_USERS_USERNAME'),
+            'password' => env('DB_USERS_PASSWORD'),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+        ],
+
         'mariadb' => [
             'driver' => 'mariadb',
             'url' => env('DB_URL'),

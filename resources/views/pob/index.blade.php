@@ -12,10 +12,10 @@
                     <label class="text-xs font-medium text-gray-500 mb-1">Business Unit</label>
                     <select name="business_unit" id="business_unit"
                         class="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 min-w-[150px]"
-                        {{ Auth::user()->credentials != 'superadmin' ? 'disabled' : '' }}>
+                        {{ Auth::user()->credentials != 'SUPER_ADMIN' ? 'disabled' : '' }}>
                         <!-- Options will be dynamically inserted -->
                     </select>
-                    @if (Auth::user()->credentials != 'superadmin')
+                    @if (Auth::user()->credentials != 'SUPER_ADMIN')
                         <input type="hidden" name="business_unit" value="{{ Auth::user()->business_unit }}">
                     @endif
                 </div>
@@ -177,7 +177,7 @@
                                 if ("{{ request('business_unit') }}" && bu ===
                                     "{{ request('business_unit') }}") {
                                     option.selected = true;
-                                } else if ("{{ Auth::user()->credentials }}" !== 'superadmin' && bu ===
+                                } else if ("{{ Auth::user()->credentials }}" !== 'SUPER_ADMIN' && bu ===
                                     "{{ Auth::user()->business_unit }}") {
                                     option.selected = true;
                                 } else if (index === 0 && !businessUnitSelect.value) {
