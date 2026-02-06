@@ -172,30 +172,32 @@
                                 </div>
                             </div>
 
-                            <div class="relative" id="maintenanceDropdownContainer">
-                                <!-- Main Button -->
-                                <x-nav-link type="button" id="maintenanceDropdownButton" :active="request()->routeIs('maintenance.index')">
-                                    System Maintenance
-                                    <svg class="ml-1 w-4 h-4 inline-block" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M19 9l-7 7-7-7" />
-                                    </svg>
-                                </x-nav-link>
+                            @if (Auth::user()->credentials === 'SUPER_ADMIN')
+                                <div class="relative" id="maintenanceDropdownContainer">
+                                    <!-- Main Button -->
+                                    <x-nav-link type="button" id="maintenanceDropdownButton" :active="request()->routeIs('maintenance.index')">
+                                        System Maintenance
+                                        <svg class="ml-1 w-4 h-4 inline-block" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </x-nav-link>
 
-                                <!-- Dropdown Menu -->
-                                <div id="maintenanceDropdownMenu"
-                                    class="hidden absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white z-50">
-                                    <a href="{{ route('maintenance.index') }}"
-                                        class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                                        User Maintenance
-                                    </a>
-                                    <a href="{{ route('maintenance.audit_trail') }}"
-                                        class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                                        Audit Trail
-                                    </a>
+                                    <!-- Dropdown Menu -->
+                                    <div id="maintenanceDropdownMenu"
+                                        class="hidden absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white z-50">
+                                        <a href="{{ route('maintenance.index') }}"
+                                            class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                                            User Maintenance
+                                        </a>
+                                        <a href="{{ route('maintenance.audit_trail') }}"
+                                            class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                                            Audit Trail
+                                        </a>
+                                    </div>
                                 </div>
-                            </div>
+                            @endif
                         @endauth
                     </div>
                 </div>

@@ -48,7 +48,7 @@
                         class="border border-gray-300 rounded-md px-3 py-2 w-full" {{ $editing ? '' : 'readonly' }} required/>
                 </div>
 
-                <div>
+                <div class="{{Auth::user()->credentials === 'SUPER_ADMIN' ? '' : 'hidden'}}">
                     <x-form-label for="credentials">Credentials</x-form-label>
                     <select name="credentials" id="credentials"
                         class="border border-gray-300 rounded-md px-3 py-2 text-sm text-black-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 w-full"
