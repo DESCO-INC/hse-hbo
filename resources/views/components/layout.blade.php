@@ -187,6 +187,10 @@
                                     <!-- Dropdown Menu -->
                                     <div id="maintenanceDropdownMenu"
                                         class="hidden absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white z-50">
+                                        <a href="{{ route('maintenance.organization') }}"
+                                            class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                                            B.U. and Group List
+                                        </a>
                                         <a href="{{ route('maintenance.index') }}"
                                             class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
                                             User Maintenance

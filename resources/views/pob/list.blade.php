@@ -1,8 +1,34 @@
 <x-layout>
-    <h1 class="text-xl font-semibold text-gray-800 mb-5">POB RECORDS</h1>
+    <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-5">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between px-6 py-4">
+            <h2 class="text-lg font-medium text-gray-800">POB Lists</h2>
+            <!-- Button Row (Right) -->
+            <div class="flex gap-2 mt-4 sm:mt-0">
+                <a href="{{ url('/pob/create') }}"
+                    class="bg-green-500 text-white text-xs px-3 py-2 rounded hover:bg-green-600">
+                    Add POB
+                </a>
+                <button type="button" class="bg-green-500 text-white text-xs px-3 py-2 rounded hover:bg-green-600"
+                    onclick="document.getElementById('download-template-modal').classList.remove('hidden')">
+                    Download Template
+                </button>
+                <button class="bg-green-500 text-white text-xs px-3 py-2 rounded hover:bg-green-600" id="upload-trigger">
+                    Import
+                </button>
+                <a href="javascript:void(0);" onclick="window.history.back();"
+                    class="bg-blue-500 text-white text-xs px-3 py-2 rounded hover:bg-blue-600">
+                    Back
+                </a>
+                <a href="{{ route('hbo.index') }}"
+                    class="bg-blue-500 text-white text-xs px-3 py-2 rounded hover:bg-blue-600">
+                    Home
+                </a>
+            </div>
+        </div>
+    </div>
 
     <form action="{{ url()->current() }}" method="GET">
-        <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-5 border border-gray-100">
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-3 border border-gray-100">
             <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 px-6 py-3">
                 <h1 class="text-lg font-semibold text-gray-800 whitespace-nowrap self-center">Filter</h1>
                 <div class="flex flex-wrap items-end gap-4">
@@ -43,27 +69,7 @@
         </div>
     </form>
 
-    <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-3">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between px-6 py-4">
-            <h2 class="text-lg font-medium text-gray-800">POB Lists</h2>
-            <!-- Button Row (Right) -->
-            <div class="flex gap-2 mt-4 sm:mt-0">
-                <a href="{{ url('/pob/create') }}"
-                    class="bg-green-500 text-white text-xs px-3 py-2 rounded hover:bg-green-600">
-                    Add POB
-                </a>
-                <button type="button" class="bg-blue-500 text-white text-xs px-3 py-2 rounded hover:bg-blue-600"
-                    onclick="document.getElementById('download-template-modal').classList.remove('hidden')">
-                    Download Template
-                </button>
-                <button class="bg-blue-500 text-white text-xs px-3 py-2 rounded hover:bg-blue-600" id="upload-trigger">
-                    Import
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <div class="bg-white rounded-lg shadow-sm overflow-hidden mt-5">
+    <div class="bg-white rounded-lg shadow-sm overflow-hidden">
         <div class="px-6 py-5 overflow-x-auto">
             <div class="overflow-x-auto border border-gray-200 rounded">
                 <table class="min-w-full divide-y divide-gray-200 text-sm table-auto">

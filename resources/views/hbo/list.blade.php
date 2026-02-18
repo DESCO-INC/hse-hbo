@@ -1,9 +1,40 @@
 <x-layout>
-    <h1 class="text-xl font-semibold text-gray-800 mb-5">HBO LISTS</h1>
+    <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-5">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between px-6 py-4">
+            <h2 class="text-lg font-medium text-gray-800">HBO Lists</h2>
+            <!-- Button Row (Right) -->
+            <div class="flex gap-2 mt-4 sm:mt-0">
+                <a href="{{ url('/hbo/create') }}"
+                    class="bg-green-500 text-white text-xs px-3 py-2 rounded hover:bg-green-600">
+                    Add Item
+                </a>
+                <button id="exportBtn" type="button"
+                    class="bg-green-500 text-white text-xs px-3 py-2 rounded hover:bg-green-600">
+                    Export
+                </button>
+                <button class="bg-green-500 text-white text-xs px-3 py-2 rounded hover:bg-green-600"
+                    id="upload-trigger">
+                    Import
+                </button>
+                <a href="{{ asset('templates/hbo_template_new.xlsx') }}"
+                    class="bg-green-500 text-white text-xs px-3 py-2 rounded hover:bg-green-600">
+                    Download Template
+                </a>
+                <a href="javascript:void(0);" onclick="window.history.back();"
+                    class="bg-blue-500 text-white text-xs px-3 py-2 rounded hover:bg-blue-600">
+                    Back
+                </a>
+                <a href="{{ route('hbo.index') }}"
+                    class="bg-blue-500 text-white text-xs px-3 py-2 rounded hover:bg-blue-600">
+                    Home
+                </a>
+            </div>
+        </div>
+    </div>
 
-    <form action="{{ url()->current() }}" method="GET">
+    <form id="hbo-filter-form" action="{{ url()->current() }}" method="GET">
         <input type="hidden" name="form_type" value="filter">
-        <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-5 border border-gray-100">
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-3 border border-gray-100">
             <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 px-6 py-3">
                 <h1 class="text-lg font-semibold text-gray-800 whitespace-nowrap self-center">Filter</h1>
 
@@ -54,7 +85,7 @@
 
                     <!-- Filter Button -->
                     <div class="flex flex-col justify-end">
-                        <button type="submit"
+                        <button type="submit" id="filter-btn" name="filter-btn"
                             class="bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-5 py-2 rounded-md shadow-sm transition whitespace-nowrap">
                             Apply Filter
                         </button>
@@ -64,29 +95,6 @@
         </div>
     </form>
 
-    <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-3">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between px-6 py-4">
-            <h2 class="text-lg font-medium text-gray-800">HBO Lists</h2>
-            <!-- Button Row (Right) -->
-            <div class="flex gap-2 mt-4 sm:mt-0">
-                <a href="{{ url('/hbo/create') }}"
-                    class="bg-green-500 text-white text-xs px-3 py-2 rounded hover:bg-green-600">
-                    Add Item
-                </a>
-                <button id="exportBtn" type="button"
-                    class="bg-blue-500 text-white text-xs px-3 py-2 rounded hover:bg-blue-600">
-                    Export
-                </button>
-                <button class="bg-blue-500 text-white text-xs px-3 py-2 rounded hover:bg-blue-600" id="upload-trigger">
-                    Import
-                </button>
-                <a href="{{ asset('templates/hbo_template_new.xlsx') }}"
-                    class="bg-blue-500 text-white text-xs px-3 py-2 rounded hover:bg-blue-600">
-                    Download Template
-                </a>
-            </div>
-        </div>
-    </div>
     <!-- HBO Table -->
     <div class="bg-white rounded-lg shadow-sm overflow-hidden">
         <div class="px-6 py-5 overflow-x-auto">
@@ -389,7 +397,7 @@
 
                 function loadCompanies(businessUnit, selectedCompany = '') {
                     if (!companySelect) return;
-                    companySelect.innerHTML = '<option value="">All Companies</option>';
+                    companySelect.innerHTML = '<option value="">All Groups</option>';
                     if (!businessUnit) return;
 
                     const url = "{{ route('hbo.companies', ':bu') }}".replace(':bu', encodeURIComponent(businessUnit));
@@ -449,27 +457,38 @@
                 // ===============================
                 // 6️⃣ Apply filters button
                 // ===============================
-                const filterBtn = document.querySelector('#filter-btn') || document.querySelector(
-                    'button[type="submit"]');
-                if (filterBtn) {
-                    filterBtn.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        filters = getFilters();
-                        localStorage.setItem('hboFilters', JSON.stringify(filters));
+                const filterBtn = document.querySelector('#filter-btn');
+                const form = document.getElementById('hbo-filter-form');
 
-                        // Reload dashboard/chart/weekly if functions exist
-                        if (window.loadDashboardCount) loadDashboardCount(filters);
-                        if (window.loadChartData) loadChartData(filters);
-                        if (window.loadWeeklySummary) loadWeeklySummary(filters);
+                if (filterBtn) {
+                    filterBtn.addEventListener('click', function() {
+                        const filters = getFilters(); // your existing getFilters() function
+                        localStorage.setItem('hboFilters', JSON.stringify(filters));
                     });
                 }
 
                 // ===============================
                 // 7️⃣ Initial load
                 // ===============================
-                if (window.loadDashboardCount) loadDashboardCount(filters);
-                if (window.loadChartData) loadChartData(filters);
-                if (window.loadWeeklySummary) loadWeeklySummary(filters);
+                const savedFilters = localStorage.getItem('hboFilters');
+
+                if (savedFilters) {
+                    const filters = JSON.parse(savedFilters);
+
+                    // Only redirect if no filters are already in the URL
+                    if (!window.location.search.includes('form_type=filter')) {
+
+                        // Add the hidden 'form_type' and 'filter-btn' values
+                        filters['form_type'] = 'filter';
+                        filters['filter-btn'] = 'Apply Filter';
+
+                        // Build query string
+                        const query = new URLSearchParams(filters).toString();
+
+                        // Redirect to same page with filters
+                        window.location.href = window.location.pathname + '?' + query;
+                    }
+                }
 
                 // ===============================
                 // 8️⃣ Export modal

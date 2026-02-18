@@ -64,6 +64,7 @@ Route::prefix('maintenance')->controller(MaintenanceController::class)->group(fu
     Route::get('/profile', 'profile')->name('maintenance.profile');
     Route::put('/profile', 'profile_update')->name('maintenance.profile_update');
     Route::get('/audit_trail', 'audit_trail')->name('maintenance.audit_trail');
+    Route::get('/organization', 'organization')->name('maintenance.organization');
     
 });
 

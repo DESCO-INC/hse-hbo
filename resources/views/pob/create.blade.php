@@ -1,4 +1,22 @@
 <x-layout>
+
+    <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-5">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between px-6 py-4">
+            <h2 class="text-lg font-medium text-gray-800">Add POB</h2>
+            <!-- Button Row (Right) -->
+            <div class="flex gap-2 mt-4 sm:mt-0">
+                <a href="javascript:void(0);" onclick="window.history.back();"
+                    class="bg-blue-500 text-white text-xs px-3 py-2 rounded hover:bg-blue-600">
+                    Back
+                </a>
+                <a href="{{ route('hbo.index') }}"
+                    class="bg-blue-500 text-white text-xs px-3 py-2 rounded hover:bg-blue-600">
+                    Home
+                </a>
+            </div>
+        </div>
+    </div>
+
     <!-- MAIN GRID CONTAINER -->
     <div id="mainContainer" class="grid grid-cols-1 md:grid-cols-3 gap-6 transition-all duration-300">
 

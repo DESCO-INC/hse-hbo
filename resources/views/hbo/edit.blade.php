@@ -1,14 +1,31 @@
 <x-layout>
+    <div
+        class="flex justify-between items-center mb-5 bg-white rounded-2xl shadow-sm border border-gray-200 px-6 py-4 transition-all duration-300">
+        <h2 class="text-lg font-medium text-gray-800">View / Manage HBO</h2>
+
+        <div>
+            <a href="javascript:void(0);" onclick="window.history.back();"
+                class="bg-blue-500 text-white text-xs px-3 py-2 rounded hover:bg-blue-600">
+                Back
+            </a>
+
+            <a href="{{ route('hbo.index') }}"
+                class="bg-blue-500 text-white text-xs px-3 py-2 rounded hover:bg-blue-600 mx-1">
+                Home
+            </a>
+        </div>
+    </div>
+
     <!-- MAIN GRID CONTAINER -->
     <div id="mainContainer" class="grid grid-cols-1 md:grid-cols-3 gap-6 transition-all duration-300">
-
         <!-- MAIN FORM CARD -->
         <div id="hazardForm"
             class="md:col-span-3 bg-white rounded-2xl shadow-sm border border-gray-200 p-6 transition-all duration-300">
 
             <!-- HEADER -->
             <div class="flex justify-between items-center border-b border-gray-200 pb-4 mb-4">
-                <h1 class="text-xl font-semibold text-gray-800">View / Manage HBO</h1>
+                <h1 class="text-xl font-semibold text-gray-800">HBO No. : <span
+                        class="font-bold">{{ $hbo->id }}</span></h1>
                 <span
                     class="px-4 py-1 text-sm font-semibold rounded-full bg-green-100 text-green-800 border border-gray-300">
                     {{ $hbo->status }}

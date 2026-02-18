@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initHboBySubcategoryChart();
     initHboVsPobChart();
     initHboVsPobWeeklyChart();
-    initHboByWeekChart();
+    initWeeklySummaryChart();
 });
 
 // ✅ HBO By Date Chart (Line)
@@ -878,4 +878,80 @@ window.updateHboByWeekChart = function (byWeekly) {
         xaxis: { categories },
     });
     window.hboCharts.byWeek.updateSeries([{ name: "Total HBOs", data: totals }]);
+};
+
+// ✅ Weekly Summary Chart (Line)
+function initWeeklySummaryChart() {
+    const el = document.querySelector("#weekly-summary-chart");
+    if (!el) return;
+
+    const options = {
+        chart: {
+            type: "line",
+            height: "100%",
+            width: "100%",
+            toolbar: { show: false },
+            zoom: { enabled: false },
+        },
+        series: [
+            { name: "Two Weeks Ago", data: [] },
+            { name: "Last Week", data: [] },
+            { name: "This Week", data: [] },
+        ],
+        xaxis: {
+            categories: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+            labels: { style: { colors: "#6b7280", fontSize: "9px" } },
+            axisBorder: { color: "#e5e7eb" },
+            axisTicks: { color: "#e5e7eb" },
+        },
+        yaxis: {
+            labels: { style: { colors: "#6b7280", fontSize: "9px" } },
+        },
+        stroke: { curve: "smooth", width: 2 },
+        markers: { size: 4 },
+        grid: { borderColor: "#f3f4f6", strokeDashArray: 4 },
+        dataLabels: { enabled: false },
+        legend: { position: "top" },
+        colors: ["#f87171", "#3b82f6", "#22c55e"], // 🔴 Two Weeks Ago, 🔵 Last Week, 🟢 This Week
+        tooltip: {
+            y: { formatter: val => `${val} reports` }
+        }
+    };
+
+    window.hboCharts.weeklySummary = new ApexCharts(el, options);
+    window.hboCharts.weeklySummary.render();
+}
+
+window.updateWeeklySummaryChart = function (weeklySummary) {
+    if (!window.hboCharts.weeklySummary) return;
+    if (!weeklySummary || !weeklySummary.length) return;
+
+    const seriesData = {
+        two: [],
+        last: [],
+        this: []
+    };
+
+    weeklySummary.forEach(item => {
+        const weekKey = item.week_label;
+        const weekArray = [item.mon, item.tue, item.wed, item.thu, item.fri, item.sat, item.sun].map(v => v ?? 0);
+
+        switch (weekKey) {
+            case 'two_weeks':
+                seriesData.two = weekArray;
+                break;
+            case 'last_week':
+                seriesData.last = weekArray;
+                break;
+            case 'this_week':
+                seriesData.this = weekArray;
+                break;
+        }
+    });
+
+    window.hboCharts.weeklySummary.updateSeries([
+        { name: "Two Weeks Ago", data: seriesData.two },
+        { name: "Last Week", data: seriesData.last },
+        { name: "This Week", data: seriesData.this }
+    ]);
 };

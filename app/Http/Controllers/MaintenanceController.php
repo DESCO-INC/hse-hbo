@@ -22,6 +22,13 @@ class MaintenanceController extends Controller
         return view('maintenance.index', compact('users', 'orgs', 'business_unit'));
     }
 
+    public function organization(Request $request)
+    {
+        $orgs = Organization::paginate(10, ['*'], 'orgs_page');
+        $business_unit = Organization::distinct()->pluck('business_unit');
+        return view('maintenance.organization', compact('orgs', 'business_unit'));
+    }
+
     public function store_user(Request $request)
     {
         // Validate request
@@ -68,7 +75,7 @@ class MaintenanceController extends Controller
             'company_name' => $attributes['org_company_name'],
         ]);
 
-        return redirect()->route('maintenance.index')->with('success', 'Item Added Successfully');
+        return redirect()->route('maintenance.organization')->with('success', 'Item Added Successfully');
     }
 
     public function destroy_org($id)
@@ -76,7 +83,7 @@ class MaintenanceController extends Controller
         $org = Organization::findOrFail($id);
         $org->delete();
 
-        return redirect()->route('maintenance.index')->with('success', 'Item record deleted successfully.');
+        return redirect()->route('maintenance.organization')->with('success', 'Item record deleted successfully.');
     }
 
     public function profile()

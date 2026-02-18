@@ -1,4 +1,22 @@
 <x-layout>
+
+    <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-5">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between px-6 py-4">
+            <h2 class="text-lg font-medium text-gray-800">POB Records</h2>
+            <!-- Button Row (Right) -->
+            <div class="flex gap-2 mt-4 sm:mt-0">
+                <a href="javascript:void(0);" onclick="window.history.back();"
+                    class="bg-blue-500 text-white text-xs px-3 py-2 rounded hover:bg-blue-600">
+                    Back
+                </a>
+                <a href="{{ route('hbo.index') }}"
+                    class="bg-blue-500 text-white text-xs px-3 py-2 rounded hover:bg-blue-600">
+                    Home
+                </a>
+            </div>
+        </div>
+    </div>
+
     <div id="mainContainer" class="grid grid-cols-1 md:grid-cols-3 gap-6 transition-all duration-300">
 
         <div id="hazardForm"
@@ -31,8 +49,7 @@
                     <x-form-error name="date" />
                 </div>
 
-                <!-- Attendance fields -->
-                <div id="companyContainer" class="relative col-span-4 grid grid-flow-col auto-cols-fr gap-4">
+                <div id="companyContainer" class="relative col-span-4 grid grid-cols-10 gap-4">
                     <!-- Company inputs will be injected here dynamically -->
                 </div>
 

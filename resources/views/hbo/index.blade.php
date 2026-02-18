@@ -55,9 +55,7 @@
         </div>
     </div>
 
-
-
-    <div class="h-[1800px] grid grid-cols-4 grid-rows-15 gap-2 mb-4">
+    <div class="h-[2300px] grid grid-cols-4 grid-rows-18 gap-2 mb-4">
 
         <div class="col-span-1 row-span-1">
             <div
@@ -113,7 +111,8 @@
                 class="h-full col-span-1 bg-white rounded-lg shadow-md border p-6 hover:shadow-lg transition-shadow duration-200">
                 <div class="flex h-full items-center justify-between">
                     <div class="flex-1 h-full">
-                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">HBO submitted by Date</p>
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">HBO submitted by
+                            Date</p>
                         <div id="hbo-by-date-chart" class="w-full h-full"></div>
                     </div>
                 </div>
@@ -125,7 +124,8 @@
                 class="h-full col-span-1 bg-white rounded-lg shadow-md border p-6 hover:shadow-lg transition-shadow duration-200">
                 <div class="flex h-full items-center justify-between">
                     <div class="flex-1 h-full">
-                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">HBO Reported by Category
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">HBO Reported by
+                            Category
                         </p>
                         <div id="hbo-by-category-chart" class="w-full h-full"></div>
                     </div>
@@ -148,7 +148,7 @@
         <div class="col-span-2 row-span-3 row-start-8">
             <div
                 class="bg-white rounded-lg shadow-md border p-6 hover:shadow-lg transition-shadow duration-200 flex flex-col h-full">
-                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">HBO Submission by Type</p>
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">HBO Submission by Type</p>
                 <!-- Chart container -->
                 <div class="flex-1 relative">
                     <div id="hbo-submitted-by-type-chart" class="absolute inset-0"></div>
@@ -174,7 +174,8 @@
                 class="h-full col-span-1 bg-white rounded-lg shadow-md border p-6 hover:shadow-lg transition-shadow duration-200">
                 <div class="flex h-full items-center justify-between">
                     <div class="flex-1 h-full">
-                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">HBO submitted by Date (WEEKLY)</p>
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">HBO submitted by
+                            Date (WEEKLY)</p>
                         <div id="hbo-weekly-chart" class="w-full h-full"></div>
                     </div>
                 </div>
@@ -185,7 +186,7 @@
         <div class="row-span-2 row-start-11">
             <div
                 class="bg-white rounded-lg shadow-md border p-6 hover:shadow-lg transition-shadow duration-200 flex flex-col h-full">
-                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                     Top 5 Reporters for <br> <span id="ranking-date-range"></span>
                 </p>
                 <div class="flex-1 relative">
@@ -210,8 +211,20 @@
             </div>
         </div>
 
-
         <div class="col-span-4 row-span-2 row-start-14">
+            <div
+                class="h-full col-span-1 bg-white rounded-lg shadow-md border p-6 hover:shadow-lg transition-shadow duration-200">
+                <div class="flex h-full items-center justify-between">
+                    <div class="flex-1 h-full">
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Weekly Summary
+                            Chart</p>
+                        <div id="weekly-summary-chart" class="w-full h-full"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-span-4 row-span-2 row-start-16">
             <div
                 class="bg-white rounded-lg shadow-sm border p-5 hover:shadow-md transition-shadow duration-200 flex flex-col justify-center">
                 <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-6">Weekly Summary</h2>
@@ -346,7 +359,7 @@
             });
 
             function loadCompanies(businessUnit, selectedCompany = '') {
-                companySelect.innerHTML = '<option value="">All Companies</option>';
+                companySelect.innerHTML = '<option value="">All Groups</option>';
                 if (!businessUnit) return;
 
                 const url = "{{ route('hbo.companies', ':bu') }}".replace(':bu', encodeURIComponent(businessUnit));
@@ -470,7 +483,6 @@
                     }
                 });
             }
-
             // ===============================
             // 8️⃣ Load Weekly Summary
             // ===============================
@@ -491,6 +503,8 @@
                     data: filters,
                     success: function(response) {
                         if (!response.weekly_summary || !response.weekly_summary.length) return;
+
+                        // 🔹 Populate the table
                         response.weekly_summary.forEach(item => {
                             let prefix = '';
                             switch (item.week_label) {
@@ -511,9 +525,9 @@
                             const to = formatDateDisplay(item.date_to ?? '');
 
                             $(`#${prefix}Header`).html(`<div class="flex justify-between">
-                        <span>${formatWeekLabel(prefix)}</span>
-                        <span>[${from} - ${to}]</span>
-                    </div>`);
+                    <span>${formatWeekLabel(prefix)}</span>
+                    <span>[${from} - ${to}]</span>
+                </div>`);
 
                             $(`#${prefix}Mon`).text(item.mon ?? 0);
                             $(`#${prefix}Tue`).text(item.tue ?? 0);
@@ -523,11 +537,16 @@
                             $(`#${prefix}Sat`).text(item.sat ?? 0);
                             $(`#${prefix}Sun`).text(item.sun ?? 0);
 
-                            const total = item.total ?? ((item.mon || 0) + (item.tue || 0) + (
-                                item.wed || 0) + (item.thu || 0) + (item.fri || 0) + (
-                                item.sat || 0) + (item.sun || 0));
+                            const total = item.total ?? ((item.mon || 0) + (item.tue || 0) +
+                                (item.wed || 0) + (item.thu || 0) + (item.fri || 0) +
+                                (item.sat || 0) + (item.sun || 0));
                             $(`#${prefix}Total`).text(total);
                         });
+
+                        // 🔹 Update Weekly Summary Chart
+                        if (window.updateWeeklySummaryChart) {
+                            window.updateWeeklySummaryChart(response.weekly_summary);
+                        }
                     },
                     error: function(xhr, status, error) {
                         console.error("Error loading weekly summary:", error);
