@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initHboVsPobChart();
     initHboVsPobWeeklyChart();
     initWeeklySummaryChart();
+    initHboByWeekChart();
 });
 
 // ✅ HBO By Date Chart (Line)
