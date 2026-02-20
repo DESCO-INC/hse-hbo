@@ -163,7 +163,7 @@
                     <x-form-label for="hbo_photo">
                         Picture (Paste the link of the Photo use , comma symbol as seperator for multiple photo)
                     </x-form-label>
-                    <x-form-input id="hbo_photo" name="hbo_photo" required />
+                    <x-form-input id="hbo_photo" name="hbo_photo" />
                     <x-form-error name='hbo_photo' />
 
                     <!-- Preview Container -->

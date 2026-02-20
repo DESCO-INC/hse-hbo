@@ -197,8 +197,7 @@
                         $photoValue = is_array($photos) ? implode(', ', $photos) : $photos;
                     @endphp
 
-                    <x-form-input id="hbo_photo" name="hbo_photo" value="{{ $photoValue ?? '' }}" required
-                        disabled />
+                    <x-form-input id="hbo_photo" name="hbo_photo" value="{{ $photoValue ?? '' }}" disabled />
                     <x-form-error name='hbo_photo' />
 
                     <!-- Preview Container -->
