@@ -117,11 +117,17 @@ class HboListController extends Controller
             'date_due' => 'required|date|after_or_equal:date_raised',
             'SWA' => 'required',
             'SRO' => 'required',
+            'hbo_photo' => 'nullable', // if uploading multiple photos
             'reported_by' => 'required',
             'reported_to' => 'required',
             'hazard_description' => 'required',
             'recommendation' => 'required',
         ]);
+
+        // Convert hbo_photo to JSON if not null
+        if (!empty($data['hbo_photo'])) {
+            $data['hbo_photo'] = json_encode($data['hbo_photo']);
+        }
 
         \App\Models\HboList::create(
             array_merge($data, [
@@ -474,11 +480,17 @@ class HboListController extends Controller
             'date_due' => 'nullable|date',
             'SWA' => 'nullable|string|max:255',
             'SRO' => 'nullable|string|max:255',
+            'hbo_photo' => 'nullable',
             'reported_by' => 'nullable|string|max:255',
             'reported_to' => 'nullable|string|max:255',
             'hazard_description' => 'nullable|string|max:1000',
             'recommendation' => 'nullable|string|max:1000',
         ]);
+
+        // ✅ Convert comma-separated string to JSON array
+        if (!empty($validated['hbo_photo'])) {
+            $validated['hbo_photo'] = array_map('trim', explode(',', $validated['hbo_photo']));
+        }
 
         // ✅ Update only provided fields
         foreach ($validated as $key => $value) {

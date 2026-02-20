@@ -111,8 +111,7 @@
                 class="h-full col-span-1 bg-white rounded-lg shadow-md border p-6 hover:shadow-lg transition-shadow duration-200">
                 <div class="flex h-full items-center justify-between">
                     <div class="flex-1 h-full">
-                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">HBO submitted by
-                            Date</p>
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">HBO submitted by Date</p>
                         <div id="hbo-by-date-chart" class="w-full h-full"></div>
                     </div>
                 </div>
@@ -174,8 +173,7 @@
                 class="h-full col-span-1 bg-white rounded-lg shadow-md border p-6 hover:shadow-lg transition-shadow duration-200">
                 <div class="flex h-full items-center justify-between">
                     <div class="flex-1 h-full">
-                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">HBO submitted by
-                            Date (WEEKLY)</p>
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">HBO submitted by Date (WEEKLY)</p>
                         <div id="hbo-weekly-chart" class="w-full h-full"></div>
                     </div>
                 </div>

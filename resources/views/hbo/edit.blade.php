@@ -182,7 +182,28 @@
                     <x-form-error name="recommendation" />
                 </div>
 
+                <div class="md:col-span-4">
+                    <x-form-label for="hbo_photo">
+                        Picture (Paste the link of the Photo use , comma symbol as seperator for multiple photo)
+                    </x-form-label>
+                    @php
+                        $photos = $hbo->hbo_photo;
 
+                        if (is_string($photos)) {
+                            $decoded = json_decode($photos, true);
+                            $photos = is_array($decoded) ? $decoded : $photos;
+                        }
+
+                        $photoValue = is_array($photos) ? implode(', ', $photos) : $photos;
+                    @endphp
+
+                    <x-form-input id="hbo_photo" name="hbo_photo" value="{{ $photoValue ?? '' }}" required
+                        disabled />
+                    <x-form-error name='hbo_photo' />
+
+                    <!-- Preview Container -->
+                    <div id="hbo_photo_preview" class="mt-3 flex flex-wrap gap-3"></div>
+                </div>
 
                 <!-- Buttons -->
                 <div class="md:col-span-4 mt-6 flex flex-wrap gap-2">
@@ -516,5 +537,73 @@
             });
         }
     </script>
+
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+
+            const input = document.getElementById("hbo_photo");
+            const previewContainer = document.getElementById("hbo_photo_preview");
+
+            let timeout = null;
+
+            function normalizeImgur(link) {
+                link = link.trim();
+
+                // If it's imgur and no extension, add .jpg automatically
+                if (link.includes("i.imgur.com") && !link.match(/\.(jpg|jpeg|png|webp|gif)$/i)) {
+                    return link + ".jpg";
+                }
+
+                return link;
+            }
+
+            function renderImages() {
+                previewContainer.innerHTML = "";
+
+                if (!input.value.trim()) return;
+
+                const links = input.value.split(",");
+
+                links.forEach(link => {
+                    let finalLink = normalizeImgur(link);
+
+                    if (!finalLink) return;
+
+                    const wrapper = document.createElement("div");
+                    wrapper.className = "flex flex-col items-center";
+
+                    const img = document.createElement("img");
+                    img.src = finalLink;
+                    img.className = "w-32 h-32 object-cover rounded border shadow";
+
+                    const errorText = document.createElement("span");
+                    errorText.className = "text-xs text-red-500 mt-1 hidden";
+                    errorText.textContent = "Invalid image link";
+
+                    img.onerror = function() {
+                        img.remove();
+                        errorText.classList.remove("hidden");
+                    };
+
+                    wrapper.appendChild(img);
+                    wrapper.appendChild(errorText);
+                    previewContainer.appendChild(wrapper);
+                });
+            }
+
+            input.addEventListener("input", function() {
+                clearTimeout(timeout);
+                timeout = setTimeout(renderImages, 400);
+            });
+
+            // 🔥 IMPORTANT: render immediately on page load (for edit mode)
+            if (input.value.trim() !== "") {
+                renderImages();
+            }
+
+        });
+    </script>
+
 
 </x-layout>

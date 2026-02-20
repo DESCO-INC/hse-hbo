@@ -159,6 +159,17 @@
                     <x-form-error name='recommendation' />
                 </div>
 
+                <div class="md:col-span-4">
+                    <x-form-label for="hbo_photo">
+                        Picture (Paste the link of the Photo use , comma symbol as seperator for multiple photo)
+                    </x-form-label>
+                    <x-form-input id="hbo_photo" name="hbo_photo" required />
+                    <x-form-error name='hbo_photo' />
+
+                    <!-- Preview Container -->
+                    <div id="hbo_photo_preview" class="mt-3 flex flex-wrap gap-3"></div>
+                </div>
+
                 <!-- Buttons -->
                 <div class="md:col-span-4 mt-6 flex flex-wrap gap-2">
                     <button type="submit" id="saveBtn"
@@ -243,7 +254,55 @@
         });
     </script>
 
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
 
+            const input = document.getElementById("hbo_photo");
+            const previewContainer = document.getElementById("hbo_photo_preview");
 
+            let timeout = null;
 
+            function normalizeImgur(link) {
+                link = link.trim();
+
+                // If it's imgur and no extension, add .jpg automatically
+                if (link.includes("i.imgur.com") && !link.match(/\.(jpg|jpeg|png|webp|gif)$/i)) {
+                    return link + ".jpg";
+                }
+
+                return link;
+            }
+
+            function renderImages() {
+                previewContainer.innerHTML = "";
+
+                if (!input.value.trim()) return;
+
+                const links = input.value.split(",");
+
+                links.forEach(link => {
+                    let finalLink = normalizeImgur(link);
+
+                    if (finalLink !== "") {
+
+                        const img = document.createElement("img");
+                        img.src = finalLink;
+                        img.className = "w-32 h-32 object-cover rounded border shadow";
+
+                        img.onerror = function() {
+                            this.classList.add("opacity-40");
+                        };
+
+                        previewContainer.appendChild(img);
+                    }
+                });
+            }
+
+            input.addEventListener("input", function() {
+                clearTimeout(timeout);
+                timeout = setTimeout(renderImages, 400);
+            });
+
+        });
+    </script>
 </x-layout>
