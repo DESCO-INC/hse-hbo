@@ -25,6 +25,8 @@
                             <th class="px-4 py-3 text-left text-sm font-semibold text-white uppercase tracking-wide">
                                 Email</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-white uppercase tracking-wide">
+                                Business Unit</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-white uppercase tracking-wide">
                                 Credential</th>
                             <th class="px-4 py-3 text-center text-sm font-semibold text-white uppercase tracking-wide">
                                 Actions</th>
@@ -36,6 +38,7 @@
                                 <td class="px-4 py-3 text-sm text-gray-600">{{ $loop->iteration }}</td>
                                 <td class="px-4 py-3 text-sm text-gray-600">{{ $user->name }}</td>
                                 <td class="px-4 py-3 text-sm text-gray-600">{{ $user->email }}</td>
+                                <td class="px-4 py-3 text-sm text-gray-600">{{ $user->business_unit }}</td>
                                 <td class="px-4 py-3 text-sm text-gray-600">{{ $user->credentials ?? 'N/A' }}</td>
                                 <td class="px-4 py-3 text-center">
                                     @if (Auth::user()->id != $user->id)
