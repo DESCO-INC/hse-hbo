@@ -81,7 +81,7 @@
         </div>
 
         {{-- ADD USER MODAL --}}
-        <div x-show="addUserOpen" x-transition.opacity
+        <div x-show="addUserOpen" x-transition.opacity x-cloak
             class="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30">
             <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
                 <h2 class="text-xl font-semibold text-gray-800 mb-4">Add User</h2>
@@ -163,7 +163,7 @@
         </div>
 
         {{-- UPDATE USER MODAL --}}
-        <div x-show="updateUserOpen" x-transition.opacity
+        <div x-show="updateUserOpen" x-transition.opacity x-cloak
             class="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30">
             <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
                 <h2 class="text-xl font-semibold text-gray-800 mb-4">Update User</h2>
@@ -215,7 +215,7 @@
         </div>
 
         {{-- DELETE MODAL --}}
-        <div x-show="deleteModalOpen" x-transition.opacity
+        <div x-show="deleteModalOpen" x-transition.opacity x-cloak
             class="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30">
             <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
                 <h2 class="text-xl font-semibold text-gray-800">Confirm Delete</h2>

@@ -78,7 +78,7 @@
         </div>
 
         {{-- ====================== ADD ORG MODAL ====================== --}}
-        <div x-show="addOrgOpen" x-transition.opacity
+        <div x-show="addOrgOpen" x-transition.opacity x-cloak
             class="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30">
             <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
                 <h2 class="text-xl font-semibold text-gray-800 mb-4">Add Business Unit / Group</h2>
@@ -114,7 +114,7 @@
         </div>
 
         {{-- ====================== UPDATE ORG MODAL ====================== --}}
-        <div x-show="updateOrgOpen" x-transition.opacity
+        <div x-show="updateOrgOpen" x-transition.opacity x-cloak
             class="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30">
             <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
                 <h2 class="text-xl font-semibold text-gray-800 mb-4">Update Organization</h2>
@@ -146,7 +146,7 @@
         </div>
 
         {{-- ====================== DELETE ORG MODAL ====================== --}}
-        <div x-show="deleteModalOpen" x-transition.opacity
+        <div x-show="deleteModalOpen" x-transition.opacity x-cloak
             class="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30">
             <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
                 <h2 class="text-xl font-semibold text-gray-800">Confirm Delete</h2>
