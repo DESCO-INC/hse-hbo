@@ -14,19 +14,11 @@ use App\Models\AuditTrail;
 
 class MaintenanceController extends Controller
 {
-    public function index(Request $request)
+    public function user(Request $request)
     {
-        $users = User::paginate(5, ['*'], 'users_page');
-        $orgs = Organization::paginate(10, ['*'], 'orgs_page');
+        $users = User::paginate(10, ['*'], 'users_page');
         $business_unit = Organization::distinct()->pluck('business_unit');
-        return view('maintenance.index', compact('users', 'orgs', 'business_unit'));
-    }
-
-    public function organization(Request $request)
-    {
-        $orgs = Organization::paginate(10, ['*'], 'orgs_page');
-        $business_unit = Organization::distinct()->pluck('business_unit');
-        return view('maintenance.organization', compact('orgs', 'business_unit'));
+        return view('maintenance.user', compact('users', 'business_unit'));
     }
 
     public function store_user(Request $request)
@@ -50,7 +42,21 @@ class MaintenanceController extends Controller
         // Create user
         $user = User::create($attributes);
 
-        return redirect()->route('maintenance.index')->with('success', 'User Added Successfully');
+        return redirect()->route('maintenance.user')->with('success', 'User Added Successfully');
+    }
+
+    public function update_user(Request $request, User $user)
+    {
+        $attributes = $request->validate([
+            'name' => ['required', 'string'],
+            'email' => ['required', 'email', Rule::unique('admin.users', 'email')->ignore($user->id)],
+            'business_unit' => ['required'],
+            'credentials' => ['required'],
+        ]);
+
+        $user->update($attributes);
+
+        return back()->with('success', 'User Updated Successfully');
     }
 
     public function destroy_user($id)
@@ -58,7 +64,30 @@ class MaintenanceController extends Controller
         $user = User::findOrFail($id);
         $user->delete();
 
-        return redirect()->route('maintenance.index')->with('success', 'User record deleted successfully.');
+        return back()->with('success', 'User record deleted successfully.');
+    }
+
+    public function organization(Request $request)
+    {
+        $query = Organization::query();
+
+        // Search
+        if ($request->filled('search')) {
+            $search = $request->search;
+
+            $query->where(function ($q) use ($search) {
+                $q->where('business_unit', 'like', "%{$search}%")->orWhere('company_name', 'like', "%{$search}%");
+            });
+        }
+
+        $orgs = $query
+            ->orderBy('id', 'desc')
+            ->paginate(10, ['*'], 'orgs_page')
+            ->withQueryString(); // 👈 keeps search when paginating
+
+        $business_unit = Organization::distinct()->pluck('business_unit');
+
+        return view('maintenance.organization', compact('orgs', 'business_unit'));
     }
 
     public function store_org(Request $request)
@@ -76,6 +105,21 @@ class MaintenanceController extends Controller
         ]);
 
         return redirect()->route('maintenance.organization')->with('success', 'Item Added Successfully');
+    }
+
+    public function update_org(Request $request, Organization $org)
+    {
+        $attributes = $request->validate([
+            'org_business_unit' => ['required', 'string'],
+            'org_company_name' => ['required', 'string'],
+        ]);
+
+        $org->update([
+            'business_unit' => $attributes['org_business_unit'],
+            'company_name' => $attributes['org_company_name'],
+        ]);
+
+        return back()->with('success', 'Organization Updated Successfully');
     }
 
     public function destroy_org($id)

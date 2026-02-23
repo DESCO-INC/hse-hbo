@@ -56,16 +56,17 @@ Route::controller(OrganizationController::class)->group(function () {
 
 // Maintenance Routes
 Route::prefix('maintenance')->controller(MaintenanceController::class)->group(function ()  {
-    Route::get('/', 'index')->name('maintenance.index');
+    Route::get('/', 'user')->name('maintenance.user');
     Route::post('/', 'store_user')->name('maintenance.store_user');
+    Route::put('/user/{user}', 'update_user')->name('maintenance.update_user');
     Route::delete('/user/{id}', 'destroy_user')->name('maintenance.destroy_user');
     Route::post('/org', 'store_org')->name('maintenance.store_org');
+    Route::put('/org/{org}', 'update_org')->name('maintenance.update_org');
     Route::delete('/org/{id}', 'destroy_org')->name('maintenance.destroy_org');
     Route::get('/profile', 'profile')->name('maintenance.profile');
     Route::put('/profile', 'profile_update')->name('maintenance.profile_update');
     Route::get('/audit_trail', 'audit_trail')->name('maintenance.audit_trail');
     Route::get('/organization', 'organization')->name('maintenance.organization');
-    
 });
 
 // Route::post('/maintenance/store/bu', [MaintenanceController::class, 'storeBU'])->name('maintenance.bu.store');

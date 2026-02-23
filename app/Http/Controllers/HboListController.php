@@ -15,6 +15,7 @@ use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use Illuminate\Support\Facades\Response;
 
 use App\Models\HboList;
+use App\Models\Organization;
 use App\Models\User;
 
 class HboListController extends Controller
@@ -26,14 +27,14 @@ class HboListController extends Controller
 
     public function business_unit()
     {
-        $business_units = HboList::select('business_unit')->distinct()->pluck('business_unit');
+        $business_units = Organization::select('business_unit')->distinct()->pluck('business_unit');
 
         return response()->json($business_units);
     }
 
     public function company($business_unit)
     {
-        $company = HboList::where('business_unit', $business_unit)->distinct()->pluck('company');
+        $company = Organization::where('business_unit', $business_unit)->distinct()->pluck('company_name');
 
         return response()->json($company);
     }
@@ -787,9 +788,10 @@ class HboListController extends Controller
         }
 
         // ✅ Replace auto-size with fixed width (much faster)
-        $lastColumn = Coordinate::stringFromColumnIndex(count($columns));
-        foreach (range('A', $lastColumn) as $col) {
-            $sheet->getColumnDimension($col)->setWidth(20);
+        $maxColumns = min(count($columns), 16384); // PhpSpreadsheet max
+        for ($i = 1; $i <= $maxColumns; $i++) {
+            $colLetter = Coordinate::stringFromColumnIndex($i);
+            $sheet->getColumnDimension($colLetter)->setWidth(20);
         }
 
         $writer = new Xlsx($spreadsheet);

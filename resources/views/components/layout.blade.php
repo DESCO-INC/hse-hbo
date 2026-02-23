@@ -191,7 +191,7 @@
                                             class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
                                             B.U. and Group List
                                         </a>
-                                        <a href="{{ route('maintenance.index') }}"
+                                        <a href="{{ route('maintenance.user') }}"
                                             class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
                                             User Maintenance
                                         </a>

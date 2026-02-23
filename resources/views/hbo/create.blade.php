@@ -40,7 +40,6 @@
                     {{-- Overlay to lock the dropdown for normal users --}}
                     @if (Auth::user()->credentials != 'SUPER_ADMIN')
                         <div class="absolute inset-0 bg-transparent cursor-not-allowed"></div>
-                        {{-- Hidden field so the locked value still submits --}}
                         <input type="hidden" name="business_unit" value="{{ Auth::user()->business_unit }}">
                     @endif
 
@@ -205,7 +204,9 @@
         });
     </script>
 
-
+    <script>
+        const userBusinessUnit = @json(Auth::user()->business_unit);
+    </script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const businessUnitSelect = document.getElementById('business_unit');
@@ -215,7 +216,6 @@
             businessUnitSelect.innerHTML = '<option value="">Select Business Unit</option>';
             companySelect.innerHTML = '<option value="">Select Company</option>';
 
-            // Load business units
             fetch('{{ route('org.business_unit') }}')
                 .then(res => res.json())
                 .then(data => {
@@ -225,20 +225,18 @@
                         option.textContent = bu;
                         businessUnitSelect.appendChild(option);
                     });
+
+                    // ✅ Set selected value after options are loaded
+                    businessUnitSelect.value = userBusinessUnit;
+                    loadCompany(userBusinessUnit);
                 })
                 .catch(err => console.error('Error fetching business units:', err));
 
-            // Load companies when a business unit is selected
-            businessUnitSelect.addEventListener('change', function() {
-                const businessUnit = this.value;
-
+            function loadCompany(selectedBU) {
                 companySelect.innerHTML = '<option value="">Select Company</option>'; // reset
-
-                if (!businessUnit) return;
-
+                if (!selectedBU) return;
                 const companiesUrl = "{{ route('org.business_unit.companies', ':bu') }}".replace(':bu',
-                    encodeURIComponent(businessUnit));
-
+                    encodeURIComponent(selectedBU));
                 fetch(companiesUrl)
                     .then(res => res.json())
                     .then(data => {
@@ -250,6 +248,12 @@
                         });
                     })
                     .catch(err => console.error('Error fetching companies:', err));
+            }
+
+            // Load companies when a business unit is selected
+            businessUnitSelect.addEventListener('change', function() {
+                const businessUnit = this.value;
+                loadCompany(businessUnit);
             });
         });
     </script>

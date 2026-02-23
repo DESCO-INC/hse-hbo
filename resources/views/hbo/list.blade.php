@@ -12,8 +12,7 @@
                     class="bg-green-500 text-white text-xs px-3 py-2 rounded hover:bg-green-600">
                     Export
                 </button>
-                <button class="bg-green-500 text-white text-xs px-3 py-2 rounded hover:bg-green-600"
-                    id="upload-trigger">
+                <button class="bg-green-500 text-white text-xs px-3 py-2 rounded hover:bg-green-600" id="upload-trigger">
                     Import
                 </button>
                 <a href="{{ asset('templates/hbo_template_new.xlsx') }}"
@@ -380,16 +379,33 @@
                                 const option = document.createElement('option');
                                 option.value = bu;
                                 option.textContent = bu;
+
+                                // Preselect from filters
                                 if (bu === filters.business_unit) option.selected = true;
+
                                 @if (Auth::user()->credentials != 'SUPER_ADMIN')
+                                    // Force select user's business unit
                                     if (bu === "{{ Auth::user()->business_unit }}") option.selected = true;
+
+                                    // Make readonly style
+                                    businessUnitSelect.classList.add('bg-gray-200', 'text-gray-700');
+
+                                    // Prevent changing the select
+                                    businessUnitSelect.addEventListener('mousedown', function(e) {
+                                        e.preventDefault();
+                                    });
                                 @endif
+
                                 businessUnitSelect.appendChild(option);
                             });
 
-                            if (filters.business_unit) loadCompanies(filters.business_unit, filters.company);
+                            // ✅ Load companies for the selected business unit if user is not SUPER_ADMIN
+                            @if (Auth::user()->credentials != 'SUPER_ADMIN')
+                                loadCompanies("{{ Auth::user()->business_unit }}");
+                            @endif
                         });
 
+                    // Event when the user changes selection (SUPER_ADMIN only, since others are readonly)
                     businessUnitSelect.addEventListener('change', function() {
                         loadCompanies(this.value);
                     });
