@@ -51,6 +51,11 @@
             height: 100%;
             background: linear-gradient(135deg, rgba(34, 197, 94, 0.75) 0%, rgba(16, 185, 129, 0.65) 50%, rgba(5, 150, 105, 0.75) 100%);
         }
+
+
+        [x-cloak] {
+            display: none !important;
+        }
     </style>
 </head>
 
