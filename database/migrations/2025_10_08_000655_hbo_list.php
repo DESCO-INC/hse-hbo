@@ -33,6 +33,9 @@ return new class extends Migration
             $table->text('SWA')->nullable();
             $table->text('SRO')->nullable();
             $table->string('status')->nullable();
+            $table->json('hbo_photo')->nullable();
+            $table->json('action_photo')->nullable();
+            $table->json('verification_photo')->nullable();
             $table->string('created_by')->nullable();
             $table->timestamps();
         });

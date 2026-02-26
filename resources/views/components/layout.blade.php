@@ -57,6 +57,8 @@
             display: none !important;
         }
     </style>
+
+    <script src="{{ asset('js/jquery-3.6.0.min.js') }}"></script>
 </head>
 
 <body class="min-h-screen">
@@ -395,6 +397,7 @@
             document.getElementById('logout-form').submit();
         });
     </script>
+
 </body>
 
 </html>

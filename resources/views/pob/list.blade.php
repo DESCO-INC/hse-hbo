@@ -272,6 +272,11 @@
                 .then(data => {
                     businessUnitSelect.innerHTML = ''; // Clear existing options
 
+                    const allOption = document.createElement('option');
+                    allOption.value = ''; // Blank value for neutrality
+                    allOption.textContent = 'All Business Unit';
+                    businessUnitSelect.appendChild(allOption);
+
                     if (!Array.isArray(data) || data.length === 0) {
                         // Show "No data" if empty
                         const option = document.createElement('option');
@@ -288,17 +293,6 @@
                         const option = document.createElement('option');
                         option.value = bu;
                         option.textContent = bu;
-
-                        // Preselect logic
-                        if ("{{ request('business_unit') }}" && bu ===
-                            "{{ request('business_unit') }}") {
-                            option.selected = true;
-                        } else if ("{{ Auth::user()->credentials }}" !== 'SUPER_ADMIN' && bu ===
-                            "{{ Auth::user()->business_unit }}") {
-                            option.selected = true;
-                        } else if (index === 0 && !businessUnitSelect.value) {
-                            option.selected = true;
-                        }
 
                         businessUnitSelect.appendChild(option);
                     });

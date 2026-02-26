@@ -8,11 +8,13 @@
                     class="bg-green-500 text-white text-xs px-3 py-2 rounded hover:bg-green-600">
                     Add Item
                 </a>
-                <button id="exportBtn" type="button"
-                    class="bg-green-500 text-white text-xs px-3 py-2 rounded hover:bg-green-600">
+                <button id="btn_export" type="button"
+                    class="bg-green-500 text-white text-xs px-3 py-2 rounded hover:bg-green-600"
+                    onclick="$('#modal_export').removeClass('hidden')">
                     Export
                 </button>
-                <button class="bg-green-500 text-white text-xs px-3 py-2 rounded hover:bg-green-600" id="upload-trigger">
+                <button class="bg-green-500 text-white text-xs px-3 py-2 rounded hover:bg-green-600" id="btn_import"
+                    onclick="$('#modal_import').removeClass('hidden')">
                     Import
                 </button>
                 <a href="{{ asset('templates/hbo_template_new.xlsx') }}"
@@ -44,7 +46,7 @@
                         <label class="text-xs font-medium text-gray-500 mb-1">Status</label>
                         <select name="status" id="status"
                             class="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 min-w-[150px]">
-                            <option value="">All Status</option>
+                            <option value="">Loading..</option>
                         </select>
                     </div>
 
@@ -52,8 +54,8 @@
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-500 mb-1">Business Unit</label>
                         <select name="business_unit" id="business_unit"
-                            class="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 min-w-[150px]">
-                            <option value="">All Business Units</option>
+                            class="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 min-w-[150px] ">
+                            <option value="">Loading..</option>
                         </select>
                     </div>
 
@@ -62,7 +64,7 @@
                         <label class="text-xs font-medium text-gray-500 mb-1">Group</label>
                         <select name="company" id="company"
                             class="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 min-w-[150px]">
-                            <option value="">All Group</option>
+                            <option value="">All Groups</option>
                         </select>
                     </div>
 
@@ -180,7 +182,7 @@
     </div>
 
     <!-- Excel Upload Modal -->
-    <div id="upload-modal"
+    <div id="modal_import"
         class="hidden fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
             <h2 class="text-xl font-semibold text-gray-800">Upload Excel File</h2>
@@ -195,7 +197,7 @@
                 <div class="mt-6 flex justify-end space-x-3">
                     <button type="button"
                         class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition"
-                        onclick="document.getElementById('upload-modal').classList.add('hidden')">
+                        onclick="$('#modal_import').addClass('hidden')">
                         Cancel
                     </button>
 
@@ -216,7 +218,8 @@
     </div>
 
     <!-- Export Confirmation Modal -->
-    <div id="exportModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50">
+    <div id="modal_export"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30">
 
         <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
             <h2 class="text-lg font-semibold text-gray-800 mb-3">
@@ -232,7 +235,8 @@
             </ul>
 
             <div class="flex justify-end gap-3">
-                <button id="cancelExport" class="px-4 py-2 text-sm rounded border border-gray-300 hover:bg-gray-100">
+                <button id="cancelExport" class="px-4 py-2 text-sm rounded border border-gray-300 hover:bg-gray-100"
+                    onclick="$('#modal_export').addClass('hidden')">
                     Cancel
                 </button>
 
@@ -276,317 +280,200 @@
         </div>
     </div>
 
-    <!-- Excel Upload Modal -->
-    <div id="upload-modal"
-        class="hidden fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-            <h2 class="text-xl font-semibold text-gray-800">Upload Excel File</h2>
-            <p class="mt-2 text-sm text-gray-600">Select an Excel file (.xlsx or .xls) to upload.</p>
+    <script>
+        $(document).ready(function() {
+            const $status = $('#status');
+            const $selectBU = $('#business_unit');
+            const $selectCompany = $('#company');
+            const $datefrom = $('#date_from');
+            const $dateto = $('#date_to');
 
-            <form id="uploadForm" method="POST" action="{{ route('hbo.upload') }}" enctype="multipart/form-data">
-                @csrf
-                <input type="file" name="excel_file" accept=".xlsx,.xls"
-                    class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 file:border-0 file:bg-gray-100 file:px-3 file:py-1 file:rounded-md file:text-sm file:font-medium file:text-gray-700 hover:file:bg-gray-200"
-                    required>
+            const $btnFilter = $('#filter-btn');
 
-                <div class="mt-6 flex justify-end space-x-3">
-                    <button type="button"
-                        class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition"
-                        onclick="document.getElementById('upload-modal').classList.add('hidden')">
-                        Cancel
-                    </button>
+            const savedStatus = localStorage.getItem('filterStatus');
+            const savedBU = localStorage.getItem('filterBU');
+            const savedCompany = localStorage.getItem('filterCompany');
+            const savedDatefrom = localStorage.getItem('filterDatefrom');
+            const savedDateto = localStorage.getItem('filterDateto');
 
-                    <button type="submit" id="uploadBtn"
-                        class="relative px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition flex items-center justify-center">
-                        <svg id="spinner" class="animate-spin h-5 w-5 mr-2 text-white hidden"
-                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z">
-                            </path>
-                        </svg>
-                        <span id="uploadBtnText">Upload</span>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+            savedDatefrom ? ($datefrom.val(savedDatefrom)) : null;
+            savedDateto ? ($dateto.val(savedDateto)) : null;
 
-    @push('scripts')
-        <script>
-            document.getElementById('upload-trigger').addEventListener('click', function(e) {
-                e.preventDefault();
-                document.getElementById('upload-modal').classList.remove('hidden');
+            fetch_Statuses(savedStatus);
+            fetch_BusinessUnit(savedBU, savedCompany);
+
+            // When BU changes normally (user interaction)
+            $selectBU.on('change', function() {
+                const selectedBU = $(this).val();
+                fetchCompanies(selectedBU); // no restore value here
             });
 
-            document.addEventListener('DOMContentLoaded', function() {
-                // ===============================
-                // 1️⃣ Elements
-                // ===============================
-                const businessUnitSelect = document.getElementById('business_unit');
-                const companySelect = document.getElementById('company');
-                const dateFromInput = document.getElementById('date_from');
-                const dateToInput = document.getElementById('date_to');
-                const statusSelect = document.getElementById('status'); // list view only, might be null
+            // Save on filter click
+            $btnFilter.on('click', function() {
+                localStorage.setItem('filterStatus', $status.val());
+                localStorage.setItem('filterBU', $selectBU.val());
+                localStorage.setItem('filterCompany', $selectCompany.val());
+                localStorage.setItem('filterDatefrom', $datefrom.val());
+                localStorage.setItem('filterDateto', $dateto.val());
+            });
 
-                const exportBtn = document.getElementById('exportBtn');
-                const modal = document.getElementById('exportModal');
-                const loadingOverlay = document.getElementById('exportLoading');
-                const confirmBtn = document.getElementById('confirmExport');
-                const confirmText = document.getElementById('confirmText');
-                const confirmSpinner = document.getElementById('confirmSpinner');
+            $('#btn_export').on('click', function() {
+                const $list = $('#exportFilters');
+                $list.empty();
 
-                const uploadForm = document.getElementById('uploadForm');
-                const uploadBtn = document.getElementById('uploadBtn');
-                const spinner = document.getElementById('spinner');
-                const uploadBtnText = document.getElementById('uploadBtnText');
+                // Array of label + value pairs
+                const filters = [{
+                        label: 'Status',
+                        value: $status.val()
+                    },
+                    {
+                        label: 'Business Unit',
+                        value: $selectBU.val()
+                    },
+                    {
+                        label: 'Group',
+                        value: $selectCompany.val()
+                    },
+                    {
+                        label: 'Date from',
+                        value: $datefrom.val()
+                    },
+                    {
+                        label: 'Date to',
+                        value: $dateto.val()
+                    }
+                ];
 
-                const today = new Date();
-                const startOfYear = new Date(today.getFullYear(), 0, 1);
+                // Loop through and append only if value is not empty/null
+                filters.forEach(f => {
+                    if (f.value) { // skips null, undefined, or empty string
+                        $list.append($('<li>').append($('<strong>').text(f.label + ': '), f.value));
+                    }
+                });
+            });
 
-                const formatDate = (date) => {
-                    const yyyy = date.getFullYear();
-                    const mm = String(date.getMonth() + 1).padStart(2, '0');
-                    const dd = String(date.getDate()).padStart(2, '0');
-                    return `${yyyy}-${mm}-${dd}`;
+            $('#confirmExport').on('click', function() {
+                const $btn = $(this);
+                const $spinner = $('#confirmSpinner');
+                const $confirmText = $('#confirmText');
+
+                // 1️⃣ Grab filter values
+                const filters = {
+                    status: $status.val(),
+                    business_unit: $selectBU.val(),
+                    company: $selectCompany.val(),
+                    date_from: $datefrom.val(),
+                    date_to: $dateto.val()
                 };
 
-                // ===============================
-                // 2️⃣ Load filters from localStorage or defaults
-                // ===============================
-                let filters = JSON.parse(localStorage.getItem('hboFilters') || '{}');
-                if (!filters.date_from) filters.date_from = formatDate(startOfYear);
-                if (!filters.date_to) filters.date_to = formatDate(today);
-                if (!filters.business_unit) filters.business_unit = '';
-                if (!filters.company) filters.company = '';
-                if (!filters.status) filters.status = '';
+                // 2️⃣ Show spinner & disable button
+                $btn.prop('disabled', true);
+                $spinner.removeClass('hidden');
+                $confirmText.text('Exporting...');
 
-                // Set inputs
-                if (businessUnitSelect) businessUnitSelect.value = filters.business_unit;
-                if (companySelect) companySelect.value = filters.company;
-                if (dateFromInput) dateFromInput.value = filters.date_from;
-                if (dateToInput) dateToInput.value = filters.date_to;
-                if (statusSelect) statusSelect.value = filters.status;
+                // 3️⃣ Build URL with query parameters
+                const query = $.param(filters); // automatically skips null/empty values
+                const url = '{{ route('hbo.export') }}' + (query ? '?' + query : '');
 
-                // ===============================
-                // 3️⃣ Load business units
-                // ===============================
-                if (businessUnitSelect) {
-                    fetch('{{ route('hbo.business_unit') }}')
-                        .then(res => res.json())
-                        .then(data => {
-                            data.forEach(bu => {
-                                const option = document.createElement('option');
-                                option.value = bu;
-                                option.textContent = bu;
+                // 4️⃣ Trigger file download
+                window.location.href = url;
 
-                                // Preselect from filters
-                                if (bu === filters.business_unit) option.selected = true;
+                // 5️⃣ Optional: hide modal and reset button
+                $('#modal_export').addClass('hidden');
+                $btn.prop('disabled', false);
+                $spinner.addClass('hidden');
+                $confirmText.text('Confirm Export');
+            });
+        });
 
-                                @if (Auth::user()->credentials != 'SUPER_ADMIN')
-                                    // Force select user's business unit
-                                    if (bu === "{{ Auth::user()->business_unit }}") option.selected = true;
+        // ------------------- Fetch Functions -------------------
 
-                                    // Make readonly style
-                                    businessUnitSelect.classList.add('bg-gray-200', 'text-gray-700');
+        function fetch_Statuses(restoreValue = null) {
+            $.ajax({
+                url: '{{ route('hbo.statuses') }}',
+                method: 'GET',
+                dataType: 'json',
+                success: function(data) {
 
-                                    // Prevent changing the select
-                                    businessUnitSelect.addEventListener('mousedown', function(e) {
-                                        e.preventDefault();
-                                    });
-                                @endif
+                    const $select = $('#status');
+                    $select.empty();
+                    $select.append($('<option>', {
+                        value: '',
+                        text: 'All Status'
+                    }));
 
-                                businessUnitSelect.appendChild(option);
-                            });
+                    data.forEach(unit =>
+                        $select.append($('<option>', {
+                            value: unit,
+                            text: unit
+                        }))
+                    );
 
-                            // ✅ Load companies for the selected business unit if user is not SUPER_ADMIN
-                            @if (Auth::user()->credentials != 'SUPER_ADMIN')
-                                loadCompanies("{{ Auth::user()->business_unit }}");
-                            @endif
-                        });
-
-                    // Event when the user changes selection (SUPER_ADMIN only, since others are readonly)
-                    businessUnitSelect.addEventListener('change', function() {
-                        loadCompanies(this.value);
-                    });
-                }
-
-                function loadCompanies(businessUnit, selectedCompany = '') {
-                    if (!companySelect) return;
-                    companySelect.innerHTML = '<option value="">All Groups</option>';
-                    if (!businessUnit) return;
-
-                    const url = "{{ route('hbo.companies', ':bu') }}".replace(':bu', encodeURIComponent(businessUnit));
-                    fetch(url)
-                        .then(res => res.json())
-                        .then(data => {
-                            data.forEach(c => {
-                                const option = document.createElement('option');
-                                option.value = c;
-                                option.textContent = c;
-                                if (c === selectedCompany) option.selected = true;
-                                companySelect.appendChild(option);
-                            });
-                        })
-                        .catch(err => console.error('Error loading companies:', err));
-                }
-
-                // ===============================
-                // 4️⃣ Load statuses (list view)
-                // ===============================
-                if (statusSelect) {
-                    fetch('{{ route('hbo.statuses') }}')
-                        .then(res => res.json())
-                        .then(data => {
-                            if (!Array.isArray(data) || !data.length) {
-                                const option = document.createElement('option');
-                                option.value = '';
-                                option.textContent = 'No Status Found';
-                                statusSelect.appendChild(option);
-                                return;
-                            }
-
-                            data.forEach(s => {
-                                const option = document.createElement('option');
-                                option.value = s;
-                                option.textContent = s;
-                                if (s === filters.status) option.selected = true;
-                                statusSelect.appendChild(option);
-                            });
-                        })
-                        .catch(err => console.error('Error loading statuses:', err));
-                }
-
-                // ===============================
-                // 5️⃣ Get filters from inputs
-                // ===============================
-                function getFilters() {
-                    return {
-                        business_unit: businessUnitSelect ? businessUnitSelect.value : '',
-                        company: companySelect ? companySelect.value : '',
-                        date_from: dateFromInput ? dateFromInput.value : '',
-                        date_to: dateToInput ? dateToInput.value : '',
-                        status: statusSelect ? statusSelect.value : ''
-                    };
-                }
-
-                // ===============================
-                // 6️⃣ Apply filters button
-                // ===============================
-                const filterBtn = document.querySelector('#filter-btn');
-                const form = document.getElementById('hbo-filter-form');
-
-                if (filterBtn) {
-                    filterBtn.addEventListener('click', function() {
-                        const filters = getFilters(); // your existing getFilters() function
-                        localStorage.setItem('hboFilters', JSON.stringify(filters));
-                    });
-                }
-
-                // ===============================
-                // 7️⃣ Initial load
-                // ===============================
-                const savedFilters = localStorage.getItem('hboFilters');
-
-                if (savedFilters) {
-                    const filters = JSON.parse(savedFilters);
-
-                    // Only redirect if no filters are already in the URL
-                    if (!window.location.search.includes('form_type=filter')) {
-
-                        // Add the hidden 'form_type' and 'filter-btn' values
-                        filters['form_type'] = 'filter';
-                        filters['filter-btn'] = 'Apply Filter';
-
-                        // Build query string
-                        const query = new URLSearchParams(filters).toString();
-
-                        // Redirect to same page with filters
-                        window.location.href = window.location.pathname + '?' + query;
+                    if (restoreValue) {
+                        $select.val(restoreValue);
                     }
-                }
-
-                // ===============================
-                // 8️⃣ Export modal
-                // ===============================
-                if (exportBtn) {
-                    exportBtn.addEventListener('click', function() {
-                        const filtersForExport = getFilters();
-                        const list = document.getElementById('exportFilters');
-                        if (list) {
-                            list.innerHTML = '';
-                            Object.entries(filtersForExport).forEach(([k, v]) => {
-                                if (v) list.innerHTML +=
-                                    `<li><strong>${k.replace('_',' ').toUpperCase()}:</strong> ${v}</li>`;
-                            });
-                            if (!list.innerHTML) list.innerHTML =
-                                '<li><em>No filters applied (All records)</em></li>';
-                        }
-
-                        modal.classList.remove('hidden');
-                        modal.classList.add('flex');
-
-                        confirmBtn.onclick = function() {
-                            confirmBtn.disabled = true;
-                            confirmBtn.classList.add('opacity-70', 'cursor-not-allowed');
-                            confirmText.textContent = 'Exporting...';
-                            confirmSpinner.classList.remove('hidden');
-
-                            closeExportModal();
-                            lockPage();
-
-                            const query = new URLSearchParams(filtersForExport).toString();
-                            window.location.href = "{{ route('hbo.export') }}?" + query;
-                        };
-                    });
-
-                    document.getElementById('cancelExport')?.addEventListener('click', closeExportModal);
-                    modal?.addEventListener('click', function(e) {
-                        if (e.target.id === 'exportModal') closeExportModal();
-                    });
-
-                    function closeExportModal() {
-                        modal?.classList.add('hidden');
-                        modal?.classList.remove('flex');
-                    }
-
-                    function lockPage() {
-                        if (loadingOverlay) {
-                            loadingOverlay.classList.remove('hidden');
-                            loadingOverlay.classList.add('flex');
-                        }
-                        document.body.style.overflow = 'hidden';
-                        document.body.style.pointerEvents = 'none';
-                        if (loadingOverlay) loadingOverlay.style.pointerEvents = 'all';
-                    }
-
-                    function unlockPage() {
-                        if (loadingOverlay) {
-                            loadingOverlay.classList.add('hidden');
-                            loadingOverlay.classList.remove('flex');
-                        }
-                        document.body.style.overflow = '';
-                        document.body.style.pointerEvents = '';
-                        confirmBtn.disabled = false;
-                        confirmBtn.classList.remove('opacity-70', 'cursor-not-allowed');
-                        if (confirmText) confirmText.textContent = 'Confirm Export';
-                        if (confirmSpinner) confirmSpinner.classList.add('hidden');
-                    }
-
-                    window.addEventListener('focus', unlockPage);
-                }
-
-                // ===============================
-                // 9️⃣ Upload spinner (list view)
-                // ===============================
-                if (uploadForm) {
-                    uploadForm.addEventListener('submit', function() {
-                        if (spinner) spinner.classList.remove('hidden');
-                        if (uploadBtn) uploadBtn.disabled = true;
-                        if (uploadBtnText) uploadBtnText.textContent = 'Uploading...';
-                    });
                 }
             });
-        </script>
-    @endpush
+        }
+
+        function fetch_BusinessUnit(restoreBU = null, restoreCompany = null) {
+            $.ajax({
+                url: '{{ route('hbo.business_unit') }}',
+                method: 'GET',
+                dataType: 'json',
+                success: function(data) {
+
+                    const $select = $('#business_unit');
+                    $select.empty();
+                    $select.append($('<option>', {
+                        value: '',
+                        text: 'All Business Unit'
+                    }));
+
+                    data.forEach(unit =>
+                        $select.append($('<option>', {
+                            value: unit,
+                            text: unit
+                        }))
+                    );
+
+                    if (restoreBU) {
+                        $select.val(restoreBU);
+                        fetchCompanies(restoreBU, restoreCompany);
+                    }
+                }
+            });
+        }
+
+        function fetchCompanies(selectedBU, restoreValue = null) {
+            if (!selectedBU) return;
+
+            $.ajax({
+                url: '{{ route('hbo.companies', ['business_unit' => 'BU']) }}'
+                    .replace('BU', encodeURIComponent(selectedBU)),
+                method: 'GET',
+                dataType: 'json',
+                success: function(data) {
+
+                    const $select = $('#company');
+                    $select.empty();
+                    $select.append($('<option>', {
+                        value: '',
+                        text: 'All Groups'
+                    }));
+
+                    data.forEach(unit =>
+                        $select.append($('<option>', {
+                            value: unit,
+                            text: unit
+                        }))
+                    );
+
+                    if (restoreValue) {
+                        $select.val(restoreValue);
+                    }
+                }
+            });
+        }
+    </script>
 </x-layout>

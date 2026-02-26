@@ -597,7 +597,6 @@ window.updateHboBySubcategoryChart = function (bySubcategory) {
 };
 
 
-
 // ✅ HBO vs POB by Company (Horizontal Bar)
 function initHboVsPobChart() {
     const el = document.querySelector("#hbo-vs-pob-chart");
@@ -683,50 +682,62 @@ function initHboVsPobChart() {
     setTimeout(() => window.hboCharts.hboVsPob.resize(), 300);
 }
 
-// ✅ Update HBO vs POB Chart Data
 window.updateHboVsPobChart = function (data) {
-    if (!window.hboCharts?.hboVsPob) return;
+    const chart = window.hboCharts?.hboVsPob;
+    const el = document.querySelector("#hbo-vs-pob-chart");
+    if (!chart || !el) return;
 
     const pobData = data.POB || {};
     const hboData = data.HBO || {};
-
-    const businessUnit = data.business_unit || "All Business Units";
-    const year = data.year || "";
-    const week = data.week || "";
-
-    // ✅ Format title with business unit + date range
-    let titleText = `HBO vs POB by Group — ${businessUnit}`;
-    if (year && week) titleText += ` [Week${week} - ${year}]`;
 
     const companies = Array.from(
         new Set([...Object.keys(pobData), ...Object.keys(hboData)])
     );
 
-    const pobSeries = companies.map((c) => pobData[c] ?? 0);
-    const hboSeries = companies.map((c) => hboData[c] ?? 0);
+    // 🔎 Create / get "no data" message element
+    let noDataEl = document.querySelector("#hbo-no-data-message");
 
-    // ✅ Update chart options (title + labels)
-    window.hboCharts.hboVsPob.updateOptions({
-        title: {
-            text: titleText,
-            align: "left",
-            margin: 20,
-            offsetY: 10,
-            style: {
-                fontSize: "18px",
-                fontWeight: "bold",
-                color: "#111827",
-            },
-        },
-        xaxis: { categories: companies },
+    if (!noDataEl) {
+        noDataEl = document.createElement("div");
+        noDataEl.id = "hbo-no-data-message";
+        noDataEl.style.textAlign = "center";
+        noDataEl.style.padding = "40px";
+        noDataEl.style.fontWeight = "600";
+        noDataEl.style.color = "#6b7280";
+        noDataEl.style.fontSize = "16px";
+        noDataEl.innerText = "No Data for this filter";
+        el.parentNode.insertBefore(noDataEl, el.nextSibling);
+    }
+
+    // 🔥 IF NO DATA
+    if (companies.length === 0) {
+        chart.updateSeries([
+            { name: "POB", data: [] },
+            { name: "HBO", data: [] },
+        ]);
+
+        el.style.display = "none";        // hide chart
+        noDataEl.style.display = "block"; // show message
+        return;
+    }
+
+    // ✅ If data exists
+    el.style.display = "block";
+    noDataEl.style.display = "none";
+
+    const pobSeries = companies.map(c => pobData[c] ?? 0);
+    const hboSeries = companies.map(c => hboData[c] ?? 0);
+
+    chart.updateOptions({
+        xaxis: { categories: companies }
     });
 
-    // ✅ Update series data
-    window.hboCharts.hboVsPob.updateSeries([
+    chart.updateSeries([
         { name: "POB", data: pobSeries },
         { name: "HBO", data: hboSeries },
     ]);
 };
+
 
 // ✅ HBO vs POB by Week (Vertical Bar)
 function initHboVsPobWeeklyChart() {
@@ -762,44 +773,62 @@ function initHboVsPobWeeklyChart() {
 
     window.hboCharts = window.hboCharts || {};
     window.hboCharts.hboVsPobWeekly = chart;
-
-    // ✅ Updater for new daily + weekly summary format
-    window.updateHboVsPobWeeklyChart = function (data) {
-        const pob = data.POB ?? [];
-        const hbo = data.HBO ?? [];
-        const businessUnit = data.business_unit ?? "All Business Units";
-        const year = data.year || "";
-        const week = data.week || "";
-
-        // Use dates as labels (daily + weekly summary)
-        const labels = pob.map(i => i.date);
-
-        const pobData = pob.map(i => i.average ?? 0);
-        const hboData = hbo.map(i => i.total ?? 0);
-
-        // ✅ Format title with business unit + date range
-        let titleText = `HBO vs POB Weekly Report — ${businessUnit}`;
-        if (year && week) titleText += ` [Week${week} - ${year}]`;
-
-        // Update chart
-        const chart = window.hboCharts?.hboVsPobWeekly;
-        if (chart) {
-            chart.updateOptions({
-                title: {
-                    text: titleText,
-                    align: "left",
-                    style: { fontSize: "18px", fontWeight: "bold", color: "#111827" },
-                },
-                xaxis: { categories: labels },
-            });
-
-            chart.updateSeries([
-                { name: "POB", data: pobData },
-                { name: "HBO", data: hboData },
-            ]);
-        }
-    };
 }
+
+window.updateHboVsPobWeeklyChart = function (data) {
+    const chart = window.hboCharts?.hboVsPobWeekly;
+    const el = document.querySelector("#hbo-vs-pob-weekly-chart");
+    if (!chart || !el) return;
+
+    const pob = data.POB ?? [];
+    const hbo = data.HBO ?? [];
+
+    // labels drive whether data exists
+    const labels = pob.map(i => i.date).filter(Boolean);
+
+    // 🔎 Create / get "no data" message
+    let noDataEl = document.querySelector("#hbo-weekly-no-data-message");
+
+    if (!noDataEl) {
+        noDataEl = document.createElement("div");
+        noDataEl.id = "hbo-weekly-no-data-message";
+        noDataEl.style.textAlign = "center";
+        noDataEl.style.padding = "40px";
+        noDataEl.style.fontWeight = "600";
+        noDataEl.style.color = "#6b7280";
+        noDataEl.style.fontSize = "16px";
+        noDataEl.innerText = "No Data for this filter";
+        el.parentNode.insertBefore(noDataEl, el.nextSibling);
+    }
+
+    // 🔥 IF NO DATA → hide chart, show text
+    if (labels.length === 0) {
+        chart.updateSeries([
+            { name: "POB", data: [] },
+            { name: "HBO", data: [] },
+        ]);
+
+        el.style.display = "none";
+        noDataEl.style.display = "block";
+        return;
+    }
+
+    // ✅ If data exists → show chart, hide text
+    el.style.display = "block";
+    noDataEl.style.display = "none";
+
+    const pobData = pob.map(i => Math.round(i.average ?? 0));
+    const hboData = hbo.map(i => i.total ?? 0);
+
+    chart.updateOptions({
+        xaxis: { categories: labels },
+    });
+
+    chart.updateSeries([
+        { name: "POB", data: pobData },
+        { name: "HBO", data: hboData },
+    ]);
+};
 
 // ✅ HBO By Week Chart (Line)
 function initHboByWeekChart() {

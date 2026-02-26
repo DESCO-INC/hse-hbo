@@ -50,20 +50,12 @@ class HboListController extends Controller
     {
         $query = HboList::query();
 
-        /**
-         * ======================
-         * SEARCH ONLY
-         * ======================
-         */
+        // SEARCH
         if ($request->form_type === 'search' && $request->filled('search')) {
             $query->where('id', $request->search);
         }
 
-        /**
-         * ======================
-         * FILTER ONLY
-         * ======================
-         */
+        // FILTER
         if ($request->form_type === 'filter') {
             if ($request->filled('business_unit')) {
                 $query->where('business_unit', $request->business_unit);
@@ -86,9 +78,9 @@ class HboListController extends Controller
             }
         }
 
+        $organization = Organization::select('business_unit', 'company_name')->get();
         $hboList = $query->orderBy('id', 'desc')->paginate(10)->appends($request->all());
-
-        return view('hbo.list', compact('hboList'));
+        return view('hbo.list', compact('hboList', 'organization'));
     }
 
     public function create()
@@ -470,7 +462,7 @@ class HboListController extends Controller
 
     public function update(Request $request, HboList $hbo)
     {
-        // ✅ Validate only editable fields
+        // ✅ Validate editable fields including Action fields
         $validated = $request->validate([
             'business_unit' => 'nullable|string|max:255',
             'company' => 'nullable|string|max:255',
@@ -486,22 +478,26 @@ class HboListController extends Controller
             'reported_to' => 'nullable|string|max:255',
             'hazard_description' => 'nullable|string|max:1000',
             'recommendation' => 'nullable|string|max:1000',
+            'action_by' => 'nullable|string|max:255',
+            'action_date' => 'nullable|date',
+            'action_remarks' => 'nullable|string|max:1000',
+            'verified_by' => 'nullable|string|max:255',
+            'verified_date' => 'nullable|date',
+            'verified_remarks' => 'nullable|string|max:1000',
         ]);
 
-        // ✅ Convert comma-separated string to JSON array
+        // ✅ Convert comma-separated string to JSON array for photos
         if (!empty($validated['hbo_photo'])) {
             $validated['hbo_photo'] = array_map('trim', explode(',', $validated['hbo_photo']));
         }
 
-        // ✅ Update only provided fields
+        // ✅ Update all validated fields on the model
         foreach ($validated as $key => $value) {
             $hbo->$key = $value;
         }
-
         $hbo->save();
-
-        // ✅ Redirect back to the edit page with success message
-        return redirect()->route('hbo.edit', $hbo->id)->with('success', 'HBO information updated successfully.');
+        
+        return redirect()->route('hbo.edit', $hbo->id)->with('success', 'HBO information and Action updated successfully.');
     }
 
     public function takeAction(Request $request, HboList $hbo)

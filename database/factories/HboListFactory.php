@@ -18,8 +18,14 @@ class HboListFactory extends Factory
     {
         return [
             'business_unit' => $this->faker->randomElement(['PIONEER1']),
-            'company' => $this->faker->randomElement(['PGPC', 'DESCO', 'Soliman', 'IMPIC', 'MILEAGE', 'SDI', 'RYT', 'T1/RCCe', 'JCC', 'UZMA', 'SLB', 'CSA', 'WEATHERFORD', 'ADA', 'PGEI', 'PAMPISCO', 'OTHERS']),
-            'type' => $this->faker->randomElement(['Safe Behavior', 'Safe Condition', 'Unsafe Behavior', 'Unsafe Condition']),
+            'company' => $this->faker->randomElement([
+                'PGPC', 'DESCO', 'Soliman', 'IMPIC', 'MILEAGE', 'SDI',
+                'RYT', 'T1/RCCe', 'JCC', 'UZMA', 'SLB', 'CSA',
+                'WEATHERFORD', 'ADA', 'PGEI', 'PAMPISCO', 'OTHERS'
+            ]),
+            'type' => $this->faker->randomElement([
+                'Safe Behavior', 'Safe Condition', 'Unsafe Behavior', 'Unsafe Condition'
+            ]),
             'category' => $this->faker->word(),
             'sub_category' => $this->faker->word(),
             'hazard_description' => $this->faker->sentence(),
@@ -28,13 +34,20 @@ class HboListFactory extends Factory
             'reported_to' => $this->faker->name(),
             'date_raised' => $this->faker->dateTimeBetween(now()->startOfYear(), now())->format('Y-m-d'),
             'date_due' => $this->faker->dateTimeBetween(now()->startOfYear(), now())->format('Y-m-d'),
-            'action_by' => $this->faker->name(),
-            'action_date' => $this->faker->date(),
-            'action_remarks' => $this->faker->sentence(),
-            'verified_by' => $this->faker->name(),
-            'verified_date' => $this->faker->date(),
-            'verified_remarks' => $this->faker->sentence(),
-            'status' => $this->faker->randomElement(['ONGOING', 'FOR VERIFICATION', 'CLOSE']),
+
+            // Leave action fields blank
+            'action_by' => null,
+            'action_date' => null,
+            'action_remarks' => null,
+
+            // Leave verified fields blank
+            'verified_by' => null,
+            'verified_date' => null,
+            'verified_remarks' => null,
+
+            // Set status to only ONGOING
+            'status' => 'ONGOING',
+
             'created_by' => $this->faker->name(),
         ];
     }
