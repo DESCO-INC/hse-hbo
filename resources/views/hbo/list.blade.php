@@ -54,7 +54,7 @@
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-500 mb-1">Business Unit</label>
                         <select name="business_unit" id="business_unit"
-                            class="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 min-w-[150px] ">
+                            class="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 min-w-[150px]>
                             <option value="">Loading..</option>
                         </select>
                     </div>
