@@ -10,28 +10,21 @@
                     <form method="POST" action="{{ url('/login') }}">
                         @csrf
                         <div class="mb-2">
-                            <x-form-label>Email</x-form-label>
-                            <div class="mt-2">
-                                <x-form-input id="email" name="email" placeholder="admin@desco.ph" required />
-                                <x-form-error name='email' />
-                            </div>
+                            <x-input label="Email" type="email" name="email" value="{{ old('email') }}"
+                                placeholder="Enter your email" class="w-full" />
                         </div>
 
                         <div class="mb-2">
-                            <x-form-label>Password</x-form-label>
-                            <div class="mt-2">
-                                <x-form-input type="password" id="password" name="password" required />
-                                <x-form-error name='password' />
-                            </div>
+                            <x-input label="Password" type="password" name="password" placeholder="Enter your password"
+                                class="w-full" />
                         </div>
 
                 </div>
                 <div class="px-4 pb-4 pt-0">
-                    <button
-                        class="w-full rounded-md bg-green-500 py-2 px-4 border border-transparent text-center text-sm text-white transition-all shadow-md hover:shadow-lg focus:bg-slate-700 focus:shadow-none active:bg-slate-700 hover:bg-slate-700 active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
-                        type="submit">
+
+                    <x-button type="submit" class="w-full">
                         Login
-                    </button>
+                    </x-button>
                     </form>
                 </div>
             </div>

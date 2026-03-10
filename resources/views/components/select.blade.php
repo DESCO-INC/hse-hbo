@@ -1,22 +1,56 @@
-@props(['name', 'id' => null, 'options' => [], 'value' => null, 'addedClass' => null])
+@props([
+    'label' => '',
+    'name',
+    'options' => [],
+    'value' => '',
+    'size' => 'md',
+    'width' => '40',
+    'readonly' => false,
+])
 
-<label for="{{ $id ?? $name }}" {{ $attributes->merge(['class' => 'block text-sm font-medium text-gray-700 mb-2']) }}>
-    {{ $slot }}
-</label>
+@php
+    $error = $errors->first($name);
 
-<select name="{{ $name }}" id="{{ $id ?? $name }}"
-    {{ $attributes->merge([
-        'class' =>
-            'w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none ' .
-            ($addedClass ?? ''),
-    ]) }}>
-    @foreach ($options as $key => $option)
-        <option value="{{ $key }}" {{ old($name, $value) == $key ? 'selected' : '' }}>
-            {{ $option }}
-        </option>
-    @endforeach
-</select>
+    // Size variants
+    $sizes = [
+        'sm' => ['select' => 'px-2 py-1 text-sm', 'label' => 'text-xs'],
+        'md' => ['select' => 'px-2 py-1.5 text-sm', 'label' => 'text-sm'],
+        'lg' => ['select' => 'px-3 py-2 text-base', 'label' => 'text-base'],
+    ];
 
-@error($name)
-    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-@enderror
+    $selectSize = $sizes[$size]['select'] ?? $sizes['md']['select'];
+    $labelSize = $sizes[$size]['label'] ?? $sizes['md']['label'];
+
+    // Width class
+    $widthClass = $width ? "w-$width" : 'w-full';
+@endphp
+
+<div class="flex flex-col {{ $widthClass }}">
+    {{-- Label --}}
+    @if ($label)
+        <label for="{{ $name }}" class="mb-1 font-medium text-gray-700 {{ $labelSize }}">
+            {{ $label }}
+        </label>
+    @endif
+
+    {{-- Select --}}
+    <select name="{{ $name }}" id="{{ $name }}"
+        {{ $attributes->merge([
+            'class' =>
+                "$selectSize border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)] focus:border-[var(--color-accent)] transition-colors duration-200 " .
+                ($readonly ? 'cursor-not-allowed bg-gray-100 text-gray-500' : ''),
+        ]) }}
+        @if ($readonly) onmousedown="return false;"
+        onkeydown="return false;" @endif>
+        @foreach ($options as $optionValue => $optionLabel)
+            <option value="{{ $optionValue }}" {{ old($name, $value) == $optionValue ? 'selected' : '' }}>
+                {{ $optionLabel }}
+            </option>
+        @endforeach
+    </select>
+
+    {{-- Error --}}
+    @if ($error)
+        <span class="text-red-600 text-xs mt-1">{{ $error }}</span>
+    @endif
+</div>

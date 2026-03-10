@@ -1,100 +1,76 @@
 <x-layout>
-    <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-5">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between px-6 py-4">
+    <x-card class="mb-2">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <h2 class="text-lg font-medium text-gray-800">HBO Lists</h2>
-            <!-- Button Row (Right) -->
+
             <div class="flex gap-2 mt-4 sm:mt-0">
-                <a href="{{ url('/hbo/create') }}"
-                    class="bg-green-500 text-white text-xs px-3 py-2 rounded hover:bg-green-600">
+                <x-button size="sm"  size="sm" href="{{ url('/hbo/create') }}">
                     Add Item
-                </a>
-                <button id="btn_export" type="button"
-                    class="bg-green-500 text-white text-xs px-3 py-2 rounded hover:bg-green-600"
-                    onclick="$('#modal_export').removeClass('hidden')">
+                </x-button>
+
+                <x-button size="sm" id="btn_export">
                     Export
-                </button>
-                <button class="bg-green-500 text-white text-xs px-3 py-2 rounded hover:bg-green-600" id="btn_import"
-                    onclick="$('#modal_import').removeClass('hidden')">
+                </x-button>
+
+                <x-button size="sm" id="btn_import" onclick="toggleModal('modal_import')">
                     Import
-                </button>
-                <a href="{{ asset('templates/hbo_template_new.xlsx') }}"
-                    class="bg-green-500 text-white text-xs px-3 py-2 rounded hover:bg-green-600">
+                </x-button>
+
+                <x-button size="sm" href="{{ asset('templates/hbo_template_new.xlsx') }}">
                     Download Template
-                </a>
-                <a href="javascript:void(0);" onclick="window.history.back();"
-                    class="bg-blue-500 text-white text-xs px-3 py-2 rounded hover:bg-blue-600">
+                </x-button>
+
+                <x-button size="sm" onclick="window.history.back();" variant="info">
                     Back
-                </a>
-                <a href="{{ route('hbo.index') }}"
-                    class="bg-blue-500 text-white text-xs px-3 py-2 rounded hover:bg-blue-600">
+                </x-button>
+
+                <x-button size="sm" href="{{ route('hbo.index') }}" variant="info">
                     Home
-                </a>
+                </x-button>
             </div>
         </div>
-    </div>
+    </x-card>
 
-    <form id="hbo-filter-form" action="{{ url()->current() }}" method="GET">
-        <input type="hidden" name="form_type" value="filter">
-        <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-3 border border-gray-100">
-            <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 px-6 py-3">
+    <x-card class="mb-2">
+        <form id="hbo-filter-form" action="{{ url()->current() }}" method="GET">
+            <input type="hidden" name="form_type" value="filter">
+            <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                 <h1 class="text-lg font-semibold text-gray-800 whitespace-nowrap self-center">Filter</h1>
 
                 <div class="flex flex-wrap items-end gap-4">
-
                     <!-- Status -->
-                    <div class="flex flex-col">
-                        <label class="text-xs font-medium text-gray-500 mb-1">Status</label>
-                        <select name="status" id="status"
-                            class="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 min-w-[150px]">
-                            <option value="">Loading..</option>
-                        </select>
-                    </div>
+                    <x-select label="Status" name="status" size="sm" width="30" :options="['' => 'All Status'] +
+                        $status->mapWithKeys(fn($status) => [$status => $status])->toArray()" />
 
-                    <!-- Business Unit -->
-                    <div class="flex flex-col">
-                        <label class="text-xs font-medium text-gray-500 mb-1">Business Unit</label>
-                        <select name="business_unit" id="business_unit"
-                            class="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 min-w-[150px]>
-                            <option value="">Loading..</option>
-                        </select>
-                    </div>
+                    @php
+                        $superAdmin = Auth::user()->credentials == 'SUPER_ADMIN';
+                    @endphp
+                    <x-select label="Business Unit" name="business_unit" size="sm" :value="$superAdmin ? '' : Auth::user()->business_unit"
+                        :readonly="!$superAdmin" :options="['' => 'All Business Unit'] +
+                            $business_unit->mapWithKeys(fn($bu) => [$bu => $bu])->toArray()" />
 
                     <!-- Company -->
-                    <div class="flex flex-col">
-                        <label class="text-xs font-medium text-gray-500 mb-1">Group</label>
-                        <select name="company" id="company"
-                            class="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 min-w-[150px]">
-                            <option value="">All Groups</option>
-                        </select>
-                    </div>
+                    <x-select label="Group" name="company" size="sm" :options="['' => 'All Group']" />
 
                     <!-- Date From -->
-                    <div class="flex flex-col">
-                        <label class="text-xs font-medium text-gray-500 mb-1">Date From</label>
-                        <input name="date_from" id="date_from" type="date"
-                            class="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 min-w-[150px]"
-                            value="{{ request('date_from', now()->startOfYear()->format('Y-m-d')) }}" />
-                    </div>
+                    <x-input label="Date From" size="sm" width="30" type="date" name="date_from"
+                        value="{{ request('date_from', now()->startOfYear()->format('Y-m-d')) }}" />
 
                     <!-- Date To -->
-                    <div class="flex flex-col">
-                        <label class="text-xs font-medium text-gray-500 mb-1">Date To</label>
-                        <input name="date_to" id="date_to" type="date"
-                            class="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 min-w-[150px]"
-                            value="{{ request('date_to', now()->format('Y-m-d')) }}" />
-                    </div>
+                    <x-input label="Date To" size="sm" width="30" type="date" name="date_to"
+                        value="{{ request('date_to', now()->format('Y-m-d')) }}" />
 
                     <!-- Filter Button -->
                     <div class="flex flex-col justify-end">
-                        <button type="submit" id="filter-btn" name="filter-btn"
-                            class="bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-5 py-2 rounded-md shadow-sm transition whitespace-nowrap">
+                        <x-button id="btn_filter">
                             Apply Filter
-                        </button>
+                        </x-button>
                     </div>
                 </div>
             </div>
-        </div>
-    </form>
+        </form>
+    </x-card>
+
 
     <!-- HBO Table -->
     <div class="bg-white rounded-lg shadow-sm overflow-hidden">
@@ -119,6 +95,7 @@
                             <th class="px-4 py-3 text-left text-sm font-medium w-10">#</th>
                             <th class="px-4 py-3 text-left text-sm font-medium max-w-[250px]">Hazard Description</th>
                             <th class="px-4 py-3 text-left text-sm font-medium max-w-[250px]">Recommendation</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium w-32">Business Unit</th>
                             <th class="px-4 py-3 text-left text-sm font-medium w-32">Group</th>
                             <th class="px-4 py-3 text-left text-sm font-medium w-36">Date Raised</th>
                             <th class="px-4 py-3 text-left text-sm font-medium w-28">Status</th>
@@ -141,6 +118,7 @@
                                 </td>
 
                                 <!-- Other columns keep full width -->
+                                <td class="px-4 py-3 text-xs text-gray-800">{{ $hbo->business_unit }}</td>
                                 <td class="px-4 py-3 text-xs text-gray-800">{{ $hbo->company }}</td>
                                 <td class="px-4 py-3 text-xs text-gray-800">
                                     {{ \Carbon\Carbon::parse($hbo->date_raised)->format('Y-m-d') }}</td>
@@ -197,7 +175,7 @@
                 <div class="mt-6 flex justify-end space-x-3">
                     <button type="button"
                         class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition"
-                        onclick="$('#modal_import').addClass('hidden')">
+                        onclick="toggleModal('modal_import')">
                         Cancel
                     </button>
 
@@ -236,20 +214,17 @@
 
             <div class="flex justify-end gap-3">
                 <button id="cancelExport" class="px-4 py-2 text-sm rounded border border-gray-300 hover:bg-gray-100"
-                    onclick="$('#modal_export').addClass('hidden')">
+                    onclick="toggleModal('modal_export')">
                     Cancel
                 </button>
 
                 <button id="confirmExport" type="button"
-                    class="px-4 py-2 text-sm rounded bg-blue-600 text-white hover:bg-blue-700">
-                    <span id="confirmText">Confirm Export</span>
+                    class="px-4 py-2 text-sm rounded bg-blue-600 text-white hover:bg-blue-700 flex justify-between items-center">
+                    <span id="confirmText">Confirm Export </span>
 
                     <!-- Small spinner (hidden by default) -->
-                    <svg id="confirmSpinner" class="hidden animate-spin h-4 w-4 text-white"
-                        xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                            stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                    <x-heroicon-o-arrow-path id="confirmSpinner"
+                        class="hidden animate-spin h-4 w-4 text-white ml-2" /></path>
                     </svg>
                 </button>
 
@@ -257,222 +232,99 @@
         </div>
     </div>
 
-    <!-- Export Loading Overlay -->
-    <div id="exportLoading"
-        class="fixed inset-0 z-[999] hidden items-center justify-center bg-white/80 backdrop-blur-sm">
-
-        <div class="flex flex-col items-center gap-4">
-            <!-- Spinner -->
-            <svg class="animate-spin h-10 w-10 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none"
-                viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                    stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-            </svg>
-
-            <p class="text-sm font-medium text-gray-700">
-                Exporting data, please wait…
-            </p>
-
-            <p class="text-xs text-gray-500">
-                Do not refresh or close this page
-            </p>
-        </div>
-    </div>
-
     <script>
+        const $organizationData = @json($organization);
+        const FILTER_STORAGE_KEY = 'hbo_filter_data';
+
         $(document).ready(function() {
-            const $status = $('#status');
-            const $selectBU = $('#business_unit');
-            const $selectCompany = $('#company');
-            const $datefrom = $('#date_from');
-            const $dateto = $('#date_to');
 
-            const $btnFilter = $('#filter-btn');
+            const savedFilters = localStorage.getItem(FILTER_STORAGE_KEY);
+            if (savedFilters) {
+                const filters = JSON.parse(savedFilters);
 
-            const savedStatus = localStorage.getItem('filterStatus');
-            const savedBU = localStorage.getItem('filterBU');
-            const savedCompany = localStorage.getItem('filterCompany');
-            const savedDatefrom = localStorage.getItem('filterDatefrom');
-            const savedDateto = localStorage.getItem('filterDateto');
-
-            savedDatefrom ? ($datefrom.val(savedDatefrom)) : null;
-            savedDateto ? ($dateto.val(savedDateto)) : null;
-
-            fetch_Statuses(savedStatus);
-            fetch_BusinessUnit(savedBU, savedCompany);
-
-            // When BU changes normally (user interaction)
-            $selectBU.on('change', function() {
-                const selectedBU = $(this).val();
-                fetchCompanies(selectedBU); // no restore value here
-            });
-
-            // Save on filter click
-            $btnFilter.on('click', function() {
-                localStorage.setItem('filterStatus', $status.val());
-                localStorage.setItem('filterBU', $selectBU.val());
-                localStorage.setItem('filterCompany', $selectCompany.val());
-                localStorage.setItem('filterDatefrom', $datefrom.val());
-                localStorage.setItem('filterDateto', $dateto.val());
-            });
-
-            $('#btn_export').on('click', function() {
-                const $list = $('#exportFilters');
-                $list.empty();
-
-                // Array of label + value pairs
-                const filters = [{
-                        label: 'Status',
-                        value: $status.val()
-                    },
-                    {
-                        label: 'Business Unit',
-                        value: $selectBU.val()
-                    },
-                    {
-                        label: 'Group',
-                        value: $selectCompany.val()
-                    },
-                    {
-                        label: 'Date from',
-                        value: $datefrom.val()
-                    },
-                    {
-                        label: 'Date to',
-                        value: $dateto.val()
-                    }
-                ];
-
-                // Loop through and append only if value is not empty/null
-                filters.forEach(f => {
-                    if (f.value) { // skips null, undefined, or empty string
-                        $list.append($('<li>').append($('<strong>').text(f.label + ': '), f.value));
-                    }
+                Object.keys(filters).forEach(name => {
+                    $(`[name="${name}"]`).val(filters[name]);
                 });
-            });
+            }
 
-            $('#confirmExport').on('click', function() {
-                const $btn = $(this);
-                const $spinner = $('#confirmSpinner');
-                const $confirmText = $('#confirmText');
+            const selectedBU = $('#business_unit').val();
+            if (selectedBU) {
+                loadGroups(selectedBU);
 
-                // 1️⃣ Grab filter values
-                const filters = {
-                    status: $status.val(),
-                    business_unit: $selectBU.val(),
-                    company: $selectCompany.val(),
-                    date_from: $datefrom.val(),
-                    date_to: $dateto.val()
-                };
-
-                // 2️⃣ Show spinner & disable button
-                $btn.prop('disabled', true);
-                $spinner.removeClass('hidden');
-                $confirmText.text('Exporting...');
-
-                // 3️⃣ Build URL with query parameters
-                const query = $.param(filters); // automatically skips null/empty values
-                const url = '{{ route('hbo.export') }}' + (query ? '?' + query : '');
-
-                // 4️⃣ Trigger file download
-                window.location.href = url;
-
-                // 5️⃣ Optional: hide modal and reset button
-                $('#modal_export').addClass('hidden');
-                $btn.prop('disabled', false);
-                $spinner.addClass('hidden');
-                $confirmText.text('Confirm Export');
-            });
+                // restore company AFTER groups load
+                if (savedFilters) {
+                    const filters = JSON.parse(savedFilters);
+                    if (filters.company) {
+                        $('select[name="company"]').val(filters.company);
+                    }
+                }
+            }
         });
 
-        // ------------------- Fetch Functions -------------------
+        $('#business_unit').on('change', function() {
+            loadGroups($(this).val());
+        });
 
-        function fetch_Statuses(restoreValue = null) {
-            $.ajax({
-                url: '{{ route('hbo.statuses') }}',
-                method: 'GET',
-                dataType: 'json',
-                success: function(data) {
-
-                    const $select = $('#status');
-                    $select.empty();
-                    $select.append($('<option>', {
-                        value: '',
-                        text: 'All Status'
-                    }));
-
-                    data.forEach(unit =>
-                        $select.append($('<option>', {
-                            value: unit,
-                            text: unit
-                        }))
-                    );
-
-                    if (restoreValue) {
-                        $select.val(restoreValue);
-                    }
+        $('#btn_export').on('click', function() {
+            const formData = {};
+            $('#hbo-filter-form').serializeArray().forEach(field => {
+                formData[field.name] = field.value;
+            });
+            const $exportFilters = $('#exportFilters');
+            $exportFilters.empty();
+            Object.entries(formData).forEach(([key, value]) => {
+                if (value) {
+                    // Nice label formatting
+                    const label = key.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    $exportFilters.append(`<li><strong>${label}:</strong> ${value}</li>`);
                 }
             });
-        }
+            toggleModal('modal_export');
+        });
 
-        function fetch_BusinessUnit(restoreBU = null, restoreCompany = null) {
-            $.ajax({
-                url: '{{ route('hbo.business_unit') }}',
-                method: 'GET',
-                dataType: 'json',
-                success: function(data) {
-
-                    const $select = $('#business_unit');
-                    $select.empty();
-                    $select.append($('<option>', {
-                        value: '',
-                        text: 'All Business Unit'
-                    }));
-
-                    data.forEach(unit =>
-                        $select.append($('<option>', {
-                            value: unit,
-                            text: unit
-                        }))
-                    );
-
-                    if (restoreBU) {
-                        $select.val(restoreBU);
-                        fetchCompanies(restoreBU, restoreCompany);
-                    }
-                }
+        $('#confirmExport').on('click', function() {
+            const formData = {};
+            $('#hbo-filter-form').serializeArray().forEach(field => {
+                formData[field.name] = field.value;
             });
+            const queryString = $.param(formData);
+            $('#confirmSpinner').removeClass('hidden');
+            $('#confirmText').text('Exporting...');
+            window.location.href = "{{ route('hbo.export') }}" + "?" + queryString;
+            setTimeout(() => {
+                toggleModal('modal_export');
+                $('#confirmSpinner').addClass('hidden');
+                $('#confirmText').text('Confirm Export');
+            }, 1500);
+        });
+
+        // Apply Filter button
+        $('#btn_filter').on('click', function() {
+            const formData = {};
+            $('#hbo-filter-form').serializeArray().forEach(field => {
+                formData[field.name] = field.value;
+            });
+            localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(formData));
+            $('#hbo-filter-form').submit();
+        });
+
+        function toggleModal(modalId) {
+            $('#' + modalId).toggleClass('hidden');
         }
 
-        function fetchCompanies(selectedBU, restoreValue = null) {
-            if (!selectedBU) return;
+        function loadGroups(selectedBU) {
+            const companyNames = $organizationData
+                .filter(org => org.business_unit === selectedBU)
+                .map(org => org.company_name);
 
-            $.ajax({
-                url: '{{ route('hbo.companies', ['business_unit' => 'BU']) }}'
-                    .replace('BU', encodeURIComponent(selectedBU)),
-                method: 'GET',
-                dataType: 'json',
-                success: function(data) {
+            const uniqueCompanyNames = [...new Set(companyNames)];
 
-                    const $select = $('#company');
-                    $select.empty();
-                    $select.append($('<option>', {
-                        value: '',
-                        text: 'All Groups'
-                    }));
+            const $companySelect = $('select[name="company"]');
+            $companySelect.empty();
+            $companySelect.append('<option value="">All Group</option>');
 
-                    data.forEach(unit =>
-                        $select.append($('<option>', {
-                            value: unit,
-                            text: unit
-                        }))
-                    );
-
-                    if (restoreValue) {
-                        $select.val(restoreValue);
-                    }
-                }
+            uniqueCompanyNames.forEach(name => {
+                $companySelect.append(`<option value="${name}">${name}</option>`);
             });
         }
     </script>

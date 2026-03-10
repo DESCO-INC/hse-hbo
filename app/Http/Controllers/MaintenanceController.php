@@ -16,8 +16,19 @@ class MaintenanceController extends Controller
 {
     public function user(Request $request)
     {
-        $users = User::paginate(10, ['*'], 'users_page');
         $business_unit = Organization::distinct()->pluck('business_unit');
+        $query = User::query();
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+        $users = $query
+            ->orderBy('id', 'desc')
+            ->paginate(10, ['*'], 'users_page')
+            ->withQueryString(); // keeps search term in pagination links
+
         return view('maintenance.user', compact('users', 'business_unit'));
     }
 
@@ -52,10 +63,16 @@ class MaintenanceController extends Controller
             'email' => ['required', 'email', Rule::unique('admin.users', 'email')->ignore($user->id)],
             'business_unit' => ['required'],
             'credentials' => ['required'],
+            'password' => ['nullable', Password::min(5), 'confirmed'], // optional
         ]);
 
-        $user->update($attributes);
+        if (!empty($attributes['password'])) {
+            $attributes['password'] = bcrypt($attributes['password']);
+        } else {
+            unset($attributes['password']);
+        }
 
+        $user->update($attributes);
         return back()->with('success', 'User Updated Successfully');
     }
 
@@ -94,14 +111,14 @@ class MaintenanceController extends Controller
     {
         // Validate request
         $attributes = $request->validate([
-            'org_business_unit' => ['required', 'string'],
-            'org_company_name' => ['required', 'string'],
+            'business_unit' => ['required', 'string'],
+            'company_name' => ['required', 'string'],
         ]);
 
         // Map validated fields to table columns
         $org = Organization::create([
-            'business_unit' => $attributes['org_business_unit'],
-            'company_name' => $attributes['org_company_name'],
+            'business_unit' => $attributes['business_unit'],
+            'company_name' => $attributes['company_name'],
         ]);
 
         return redirect()->route('maintenance.organization')->with('success', 'Item Added Successfully');
@@ -110,13 +127,13 @@ class MaintenanceController extends Controller
     public function update_org(Request $request, Organization $org)
     {
         $attributes = $request->validate([
-            'org_business_unit' => ['required', 'string'],
-            'org_company_name' => ['required', 'string'],
+            'business_unit' => ['required', 'string'],
+            'company_name' => ['required', 'string'],
         ]);
 
         $org->update([
-            'business_unit' => $attributes['org_business_unit'],
-            'company_name' => $attributes['org_company_name'],
+            'business_unit' => $attributes['business_unit'],
+            'company_name' => $attributes['company_name'],
         ]);
 
         return back()->with('success', 'Organization Updated Successfully');

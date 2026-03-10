@@ -22,28 +22,278 @@ class HboListController extends Controller
 {
     public function index()
     {
-        return view('hbo.index');
+        $organization = Organization::select('business_unit', 'company_name')->get();
+        $business_unit = $organization->pluck('business_unit')->unique()->sort()->values();
+        return view('hbo.index', compact('business_unit', 'organization'));
     }
 
-    public function business_unit()
+    public function hboStatusCount(Request $request)
     {
-        $business_units = Organization::select('business_unit')->distinct()->pluck('business_unit');
+        $query = HboList::query();
 
-        return response()->json($business_units);
+        if ($request->filled('business_unit')) {
+            $query->where('business_unit', $request->business_unit);
+        }
+        if ($request->filled('company')) {
+            $query->where('company', $request->company);
+        }
+        if ($request->filled('date_from') && $request->filled('date_to')) {
+            $query->whereBetween('date_raised', [$request->date_from, $request->date_to]);
+        }
+
+        $counts = $query->count();
+
+        $onGoing = (clone $query)->where('status', 'ONGOING')->count();
+        $forVerification = (clone $query)->where('status', 'FOR VERIFICATION')->count();
+        $close = (clone $query)->where('status', 'CLOSED')->count();
+
+        return response()->json([
+            'success' => true,
+            'count' => $counts,
+            'ongoing' => $onGoing,
+            'forVerification' => $forVerification,
+            'close' => $close,
+        ]);
     }
 
-    public function company($business_unit)
+    public function hboDataByDate(Request $request)
     {
-        $company = Organization::where('business_unit', $business_unit)->distinct()->pluck('company_name');
+        $query = HboList::query();
+        if ($request->filled('business_unit')) {
+            $query->where('business_unit', $request->business_unit);
+        }
 
-        return response()->json($company);
+        if ($request->filled('company')) {
+            $query->where('company', $request->company);
+        }
+
+        if ($request->filled('date_from') && $request->filled('date_to')) {
+            $query->whereBetween('date_raised', [$request->date_from, $request->date_to]);
+        }
+        $data = $query->select(DB::raw('DATE(date_raised) as Date'), DB::raw('COUNT(*) as Count'))->groupBy('Date')->orderBy('Date')->get();
+
+        return response()->json($data);
     }
 
-    public function statuses()
+    public function hboDataByCategory(Request $request)
     {
-        $status = HboList::select('status')->distinct()->pluck('status');
+        $categoriesRaw = json_decode(file_get_contents(resource_path('json/categories.json')), true);
+        $query = HboList::query();
+        if ($request->filled('business_unit')) {
+            $query->where('business_unit', $request->business_unit);
+        }
 
-        return response()->json($status);
+        if ($request->filled('company')) {
+            $query->where('company', $request->company);
+        }
+
+        if ($request->filled('date_from') && $request->filled('date_to')) {
+            $query->whereBetween('date_raised', [$request->date_from, $request->date_to]);
+        }
+        $data = $query
+            ->selectRaw('category, COUNT(*) as total')
+            ->groupBy('category')
+            ->orderBy('total', 'desc')
+            ->get()
+            ->map(function ($item) use ($categoriesRaw) {
+                // Assign the color from JSON
+                $item->color = $categoriesRaw[$item->category]['color'] ?? '#000000';
+                return $item;
+            });
+
+        return response()->json($data);
+    }
+
+    public function hboDataByGroup(Request $request)
+    {
+        $query = HboList::query();
+        if ($request->filled('business_unit')) {
+            $query->where('business_unit', $request->business_unit);
+        }
+
+        if ($request->filled('company')) {
+            $query->where('company', $request->company);
+        }
+
+        if ($request->filled('date_from') && $request->filled('date_to')) {
+            $query->whereBetween('date_raised', [$request->date_from, $request->date_to]);
+        }
+        $data = $query->selectRaw('company, COUNT(*) as total')->groupBy('company')->orderBy('total', 'desc')->get();
+
+        return response()->json($data);
+    }
+
+    public function hboDataByType(Request $request)
+    {
+        $query = HboList::query();
+        if ($request->filled('business_unit')) {
+            $query->where('business_unit', $request->business_unit);
+        }
+
+        if ($request->filled('company')) {
+            $query->where('company', $request->company);
+        }
+
+        if ($request->filled('date_from') && $request->filled('date_to')) {
+            $query->whereBetween('date_raised', [$request->date_from, $request->date_to]);
+        }
+        $data = $query->selectRaw('type, COUNT(*) as total')->groupBy('type')->orderBy('total', 'desc')->get();
+
+        return response()->json($data);
+    }
+
+    public function hboDataBySubCategory(Request $request)
+    {
+        $categoriesRaw = json_decode(file_get_contents(resource_path('json/categories.json')), true);
+        $query = HboList::query();
+        if ($request->filled('business_unit')) {
+            $query->where('business_unit', $request->business_unit);
+        }
+
+        if ($request->filled('company')) {
+            $query->where('company', $request->company);
+        }
+
+        if ($request->filled('date_from') && $request->filled('date_to')) {
+            $query->whereBetween('date_raised', [$request->date_from, $request->date_to]);
+        }
+        $data = $query
+            ->selectRaw('sub_category, category, COUNT(*) as total')
+            ->groupBy('sub_category', 'category')
+            ->orderBy('total', 'desc')
+            ->get()
+            ->map(function ($item) use ($categoriesRaw) {
+                $category = $item->category;
+                $item->color = $categoriesRaw[$category]['subcategories'][$item->sub_category] ?? ($categoriesRaw[$category]['color'] ?? '#000000');
+                return $item;
+            });
+
+        return response()->json($data);
+    }
+
+    public function hboDataByWeek(Request $request)
+    {
+        $query = HboList::query();
+        if ($request->filled('business_unit')) {
+            $query->where('business_unit', $request->business_unit);
+        }
+
+        if ($request->filled('company')) {
+            $query->where('company', $request->company);
+        }
+
+        if ($request->filled('date_from') && $request->filled('date_to')) {
+            $query->whereBetween('date_raised', [$request->date_from, $request->date_to]);
+        }
+        $data = $query
+            ->selectRaw(
+                "
+        WEEK(date_raised, 1) as workweek,
+        YEAR(date_raised) as year,
+        COUNT(*) as total
+    ",
+            )
+            ->groupBy('year', 'workweek')
+            ->orderBy('year', 'asc')
+            ->orderBy('workweek', 'asc')
+            ->get()
+            ->map(function ($item) {
+                $week = (int) $item->workweek;
+
+                return [
+                    'week' => str_pad($week, 2, '0', STR_PAD_LEFT),
+                    'total' => $item->total,
+                ];
+            });
+
+        return response()->json($data);
+    }
+
+    public function hboDataByReporter(Request $request)
+    {
+        $baseQuery = HboList::query();
+
+        if ($request->filled('business_unit')) {
+            $baseQuery->where('business_unit', $request->business_unit);
+        }
+
+        if ($request->filled('company')) {
+            $baseQuery->where('company', $request->company);
+        }
+
+        if ($request->filled('date_from') && $request->filled('date_to')) {
+            $baseQuery->whereBetween('date_raised', [$request->date_from, $request->date_to]);
+        }
+
+        // Top 5 reporters
+        $topReporters = (clone $baseQuery)->select('reported_by', DB::raw('COUNT(*) as total'))->whereNotNull('reported_by')->groupBy('reported_by')->orderByDesc('total')->limit(5)->get();
+
+        // Total number of distinct reporters
+        $totalDistinct = (clone $baseQuery)->whereNotNull('reported_by')->distinct()->count('reported_by');
+
+        return response()->json([
+            'total_reporters' => $totalDistinct,
+            'top_reporters' => $topReporters,
+        ]);
+    }
+
+    public function hboWeeklyData(Request $request)
+    {
+        $baseQuery = HboList::query();
+        // Filters
+        if ($request->filled('business_unit')) {
+            $baseQuery->where('business_unit', $request->business_unit);
+        }
+        if ($request->filled('company')) {
+            $baseQuery->where('company', $request->company);
+        }
+
+        // Determine reference date (today or date_to)
+        $dateRef = $request->filled('date_to') ? Carbon::parse($request->date_to) : Carbon::now();
+        // Calculate week start/end dates for 3 weeks
+        $weeks = [
+            'Two Weeks Ago' => [
+                'start' => $dateRef->copy()->startOfWeek()->subWeeks(2),
+                'end' => $dateRef->copy()->startOfWeek()->subWeeks(2)->endOfWeek(),
+            ],
+            'Last Week' => [
+                'start' => $dateRef->copy()->startOfWeek()->subWeek(),
+                'end' => $dateRef->copy()->startOfWeek()->subWeek()->endOfWeek(),
+            ],
+            'This Week' => [
+                'start' => $dateRef->copy()->startOfWeek(),
+                'end' => $dateRef->copy()->endOfWeek(),
+            ],
+        ];
+
+        $result = [];
+
+        foreach ($weeks as $label => $range) {
+            $weekStart = $range['start'];
+            $weekEnd = $range['end'];
+            // Clone base query for each week
+            $weekQuery = (clone $baseQuery)
+                ->whereBetween('date_raised', [$weekStart->format('Y-m-d'), $weekEnd->format('Y-m-d')])
+                ->selectRaw('DATE(date_raised) as day, COUNT(*) as total')
+                ->groupBy('day')
+                ->orderBy('day')
+                ->get()
+                ->pluck('total', 'day')
+                ->toArray();
+            // Fill in 0 for missing days
+            $days = [];
+            for ($i = 0; $i < 7; $i++) {
+                $date = $weekStart->copy()->addDays($i)->format('Y-m-d');
+                $days[] = $weekQuery[$date] ?? 0;
+            }
+            $result[] = [
+                'week_label' => $label,
+                'range' => $weekStart->format('M d, Y') . ' - ' . $weekEnd->format('M d, Y'),
+                'days' => $days,
+                'total' => array_sum($days),
+            ];
+        }
+        return response()->json($result);
     }
 
     public function list(Request $request)
@@ -78,24 +328,42 @@ class HboListController extends Controller
             }
         }
 
+        if (Auth::user()->credentials != 'SUPER_ADMIN') {
+            $query->where('business_unit', Auth::user()->business_unit);
+        }
+
         $organization = Organization::select('business_unit', 'company_name')->get();
+        $status = HboList::select('status')->distinct()->pluck('status');
+        $business_unit = $organization->pluck('business_unit')->unique()->sort()->values();
         $hboList = $query->orderBy('id', 'desc')->paginate(10)->appends($request->all());
-        return view('hbo.list', compact('hboList', 'organization'));
+        return view('hbo.list', compact('hboList', 'business_unit', 'organization', 'status'));
+    }
+
+    public function dataForInput()
+    {
+        $swa_sro = json_decode(file_get_contents(resource_path('json/swa_sro.json')), true);
+        $organization = Organization::select('business_unit', 'company_name')->get();
+        $categoriesRaw = json_decode(file_get_contents(resource_path('json/categories.json')), true);
+        $business_unit = ['Business_unit' => $organization->pluck('business_unit')->unique()->toArray()];
+        $categories = ['Categories' => array_keys($categoriesRaw)];
+        $types = json_decode(file_get_contents(resource_path('json/types.json')), true);
+        $users = ['Users' => User::all()->pluck('name')->toArray()];
+        $merged = array_merge($types, $users, $categories, $business_unit, [
+            'SWA' => $swa_sro['SWA'],
+            'SRO' => $swa_sro['SRO'],
+        ]);
+
+        return [
+            'organization' => $organization,
+            'categoriesRaw' => $categoriesRaw,
+            'data' => $merged,
+        ];
     }
 
     public function create()
     {
-        $typesData = json_decode(file_get_contents(resource_path('json/types.json')), true);
-        $types = $typesData['Types'] ?? [];
-        $categoriesData = json_decode(file_get_contents(resource_path('json/categories.json')), true);
-        $swa_sro = json_decode(file_get_contents(resource_path('json/swa_sro.json')), true);
-
-        return view('hbo.create', [
-            'types' => $types,
-            'categories' => $categoriesData,
-            'swa_sro' => $swa_sro,
-            'users' => User::all(),
-        ]);
+        $data = $this->dataForInput();
+        return view('hbo.create', $data);
     }
 
     public function store(Request $request)
@@ -134,6 +402,7 @@ class HboListController extends Controller
 
     public function edit(HboList $hbo)
     {
+        $data = $this->dataForInput();
         // Load and decode types.json
         $typesData = json_decode(file_get_contents(resource_path('json/types.json')), true);
         $types = $typesData['Types'] ?? [];
@@ -141,58 +410,55 @@ class HboListController extends Controller
         $categoriesData = json_decode(file_get_contents(resource_path('json/categories.json')), true);
         $swa_sro = json_decode(file_get_contents(resource_path('json/swa_sro.json')), true);
 
-        return view('hbo.edit', [
+        return view('hbo.edit', $data, [
             'hbo' => $hbo,
-            'types' => $types,
-            'categories' => $categoriesData,
-            'swa_sro' => $swa_sro,
         ]);
     }
 
-    public function getDataCounts(Request $request)
-    {
-        $query = HboList::query();
-        if ($request->filled('business_unit') && strtolower($request->business_unit) !== 'all') {
-            $query->where('business_unit', $request->business_unit);
-        }
+    // public function getDataCounts(Request $request)
+    // {
+    //     $query = HboList::query();
+    //     if ($request->filled('business_unit') && strtolower($request->business_unit) !== 'all') {
+    //         $query->where('business_unit', $request->business_unit);
+    //     }
 
-        if ($request->filled('company') && strtolower($request->company) !== 'all') {
-            $query->where('company', $request->company);
-        }
-        if ($request->filled('date_from') && $request->filled('date_to')) {
-            $query->whereBetween('date_raised', [$request->date_from, $request->date_to]);
-        } elseif ($request->filled('date_from')) {
-            $query->whereDate('date_raised', '>=', $request->date_from);
-        } elseif ($request->filled('date_to')) {
-            $query->whereDate('date_raised', '<=', $request->date_to);
-        }
+    //     if ($request->filled('company') && strtolower($request->company) !== 'all') {
+    //         $query->where('company', $request->company);
+    //     }
+    //     if ($request->filled('date_from') && $request->filled('date_to')) {
+    //         $query->whereBetween('date_raised', [$request->date_from, $request->date_to]);
+    //     } elseif ($request->filled('date_from')) {
+    //         $query->whereDate('date_raised', '>=', $request->date_from);
+    //     } elseif ($request->filled('date_to')) {
+    //         $query->whereDate('date_raised', '<=', $request->date_to);
+    //     }
 
-        // ✅ Order by custom status and latest date
-        $query
-            ->orderByRaw(
-                "
-            CASE
-                WHEN status = 'ONGOING' THEN 1
-                WHEN status = 'FOR VERIFICATION' THEN 2
-                WHEN status = 'CLOSE' THEN 3
-                ELSE 4
-            END
-        ",
-            )
-            ->orderBy('date_raised', 'desc');
+    //     // ✅ Order by custom status and latest date
+    //     $query
+    //         ->orderByRaw(
+    //             "
+    //         CASE
+    //             WHEN status = 'ONGOING' THEN 1
+    //             WHEN status = 'FOR VERIFICATION' THEN 2
+    //             WHEN status = 'CLOSE' THEN 3
+    //             ELSE 4
+    //         END
+    //     ",
+    //         )
+    //         ->orderBy('date_raised', 'desc');
 
-        // ✅ Clone for counts
-        $countQuery = clone $query;
+    //     // ✅ Clone for counts
+    //     $countQuery = clone $query;
 
-        $counts = [
-            'total' => $countQuery->count(),
-            'ongoing' => (clone $countQuery)->where('status', 'ONGOING')->count(),
-            'for_verification' => (clone $countQuery)->where('status', 'FOR VERIFICATION')->count(),
-            'closed' => (clone $countQuery)->where('status', 'CLOSE')->count(),
-        ];
+    //     $counts = [
+    //         'total' => $countQuery->count(),
+    //         'ongoing' => (clone $countQuery)->where('status', 'ONGOING')->count(),
+    //         'for_verification' => (clone $countQuery)->where('status', 'FOR VERIFICATION')->count(),
+    //         'closed' => (clone $countQuery)->where('status', 'CLOSE')->count(),
+    //     ];
 
-        return response()->json($counts);
-    }
+    //     return response()->json($counts);
+    // }
 
     public function getFilteredData(Request $request)
     {
@@ -496,7 +762,7 @@ class HboListController extends Controller
             $hbo->$key = $value;
         }
         $hbo->save();
-        
+
         return redirect()->route('hbo.edit', $hbo->id)->with('success', 'HBO information and Action updated successfully.');
     }
 
@@ -549,7 +815,7 @@ class HboListController extends Controller
         $hbo = HboList::findOrFail($id);
         $hbo->delete();
 
-        return redirect()->route('hbo.index')->with('success', 'HBO record deleted successfully.');
+        return redirect()->route('hbo.list')->with('success', 'HBO record deleted successfully.');
     }
 
     public function upload(Request $request)

@@ -1,152 +1,100 @@
 <x-layout>
+    <x-card class="mb-2">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+            <h2 class="text-lg font-medium text-gray-800">Create POB</h2>
 
-    <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-5">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between px-6 py-4">
-            <h2 class="text-lg font-medium text-gray-800">Add POB</h2>
-            <!-- Button Row (Right) -->
             <div class="flex gap-2 mt-4 sm:mt-0">
-                <a href="javascript:void(0);" onclick="window.history.back();"
-                    class="bg-blue-500 text-white text-xs px-3 py-2 rounded hover:bg-blue-600">
+                <x-button size="sm" href="{{ route('pob.list') }}" variant="info">
                     Back
-                </a>
-                <a href="{{ route('hbo.index') }}"
-                    class="bg-blue-500 text-white text-xs px-3 py-2 rounded hover:bg-blue-600">
+                </x-button>
+
+                <x-button size="sm" href="{{ route('hbo.index') }}" variant="info">
                     Home
-                </a>
+                </x-button>
             </div>
         </div>
-    </div>
+    </x-card>
 
-    <!-- MAIN GRID CONTAINER -->
-    <div id="mainContainer" class="grid grid-cols-1 md:grid-cols-3 gap-6 transition-all duration-300">
+    <x-card class="mb-2">
+        <!-- FORM -->
+        <form id="formFields" method="POST" action="{{ route('pob.store') }}"
+            class="grid grid-cols-1 md:grid-cols-4 gap-y-4 gap-x-6">
+            @csrf
 
-        <!-- MAIN FORM CARD -->
-        <div id="hazardForm"
-            class="md:col-span-3 bg-white rounded-2xl shadow-sm border border-gray-200 p-6 transition-all duration-300">
-
-            <!-- HEADER -->
-            <div class="flex justify-between items-center border-b border-gray-200 pb-4 mb-4">
-                <h1 class="text-xl font-semibold text-gray-800">Create</h1>
+            <!-- Business Unit -->
+            <div class="relative col-span-3">
+                @php
+                    $superAdmin = Auth::user()->credentials == 'SUPER_ADMIN';
+                @endphp
+                <x-select label="Business Unit" name="business_unit" size="lg" width="full"
+                    :value="$superAdmin ? '' : Auth::user()->business_unit" :readonly="!$superAdmin" :options="['' => 'All Business Unit'] +
+                        $business_unit->mapWithKeys(fn($bu) => [$bu => $bu])->toArray()" />
             </div>
 
-            <!-- FORM -->
-            <form id="formFields" method="POST" action="{{ route('pob.store') }}"
-                class="grid grid-cols-1 md:grid-cols-4 gap-y-4 gap-x-6">
-                @csrf
+            <!-- Dates -->
+            <div>
+                <x-input label="Date" size="sm" size="lg" width="full" type="date"
+                    name="date" value="{{ request('date', now()->format('Y-m-d')) }}" required />
+            </div>
 
-                <!-- Business Unit -->
-                <div class="relative col-span-3">
-                    <x-form-label for="business_unit">Business Unit</x-form-label>
+            <div id="companyContainer" class="relative col-span-4 grid grid-cols-10 gap-4">
+                <!-- Company inputs will be injected here dynamically -->
+            </div>
 
-                    <x-form-select name="business_unit" id="business_unit" required
-                        class="{{ Auth::user()->credentials != 'SUPER_ADMIN' ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : '' }}">
-                        @if (Auth::user()->credentials == 'SUPER_ADMIN')
-                            <option value="" selected>Select Business Unit</option>
-                            @foreach ($business_unit as $bu)
-                                <option value="{{ $bu->business_unit }}">{{ $bu->business_unit }}</option>
-                            @endforeach
-                        @else
-                            @foreach ($business_unit as $bu)
-                                <option value="{{ $bu->business_unit }}"
-                                    {{ Auth::user()->business_unit == $bu->business_unit ? 'selected' : '' }}>
-                                    {{ $bu->business_unit }}
-                                </option>
-                            @endforeach
-                        @endif
-                    </x-form-select>
-
-                    {{-- Overlay to lock the dropdown for normal users --}}
-                    @if (Auth::user()->credentials != 'SUPER_ADMIN')
-                        <div class="absolute inset-0 bg-transparent cursor-not-allowed"></div>
-                        {{-- Hidden field so the locked value still submits --}}
-                        <input type="hidden" name="business_unit" value="{{ Auth::user()->business_unit }}">
-                    @endif
-
-                    <x-form-error name="business_unit" />
-                </div>
-
-                <!-- Dates -->
-                <div>
-                    <x-form-label for="date">Date</x-form-label>
-                    <x-form-input type="date" id="date" name="date" value="{{ $dateToday }}" required />
-                    <x-form-error name='date' />
-                </div>
-
-                <div id="companyContainer" class="relative col-span-4 grid grid-cols-10 gap-4">
-                    <!-- Company inputs will be injected here dynamically -->
-                </div>
-
-
-                <!-- Buttons -->
-                <div class="md:col-span-4 mt-6 flex flex-wrap gap-2">
-                    <a href="{{ route('pob.list') }}"
-                        class="px-4 py-2 rounded bg-gray-300 text-gray-800 hover:bg-gray-400 transition">
-                        Cancel
-                    </a>
-                    <button type="submit" id="saveBtn"
-                        class="px-4 py-2 rounded bg-emerald-600 text-white hover:bg-emerald-700 transition">
-                        Save
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+            <!-- Buttons -->
+            <div class="md:col-span-4 mt-6 flex flex-wrap gap-2">
+                <button type="submit" id="saveBtn"
+                    class="px-4 py-2 rounded bg-emerald-600 text-white hover:bg-emerald-700 transition">
+                    Save
+                </button>
+            </div>
+        </form>
+    </x-card>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const businessUnitSelect = document.getElementById('business_unit');
-            const companyContainer = document.getElementById('companyContainer');
-
-            const loadCompanies = (businessUnit) => {
-                if (!businessUnit) {
-                    companyContainer.innerHTML = '';
-                    return;
-                }
-
-                // Use Laravel route helper with a placeholder
-                const companiesUrl = "{{ route('org.business_unit.companies', ':bu') }}".replace(':bu',
-                    encodeURIComponent(businessUnit));
-
-                fetch(companiesUrl)
-                    .then(res => res.json())
-                    .then(data => {
-                        companyContainer.innerHTML = '';
-
-                        if (!data.length) {
-                            companyContainer.innerHTML =
-                                '<p class="text-gray-500 col-span-4">No companies found for this Business Unit.</p>';
-                            return;
-                        }
-
-                        data.forEach(co => {
-                            const div = document.createElement('div');
-                            div.classList.add('flex', 'flex-col', 'text-center');
-                            div.innerHTML = `
-                        <label class="text-[10px] font-medium text-gray-600 mb-1">${co.company_name}</label>
-                        <input type="hidden" name="company[]" value="${co.company_name}">
-                        <input type="number" name="attendance[]" class="appearance-none border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 text-center" placeholder="0" min="0" max="999" oninput="this.value=this.value.slice(0,3)">
-                    `;
-                            companyContainer.appendChild(div);
-                        });
-                    })
-                    .catch(err => {
-                        console.error('Error fetching companies:', err);
-                        companyContainer.innerHTML =
-                            '<p class="text-red-500 col-span-4">Failed to load companies.</p>';
-                    });
-            };
-
-            businessUnitSelect.addEventListener('change', function() {
-                loadCompanies(this.value);
-            });
-
-            if (businessUnitSelect.value) {
-                loadCompanies(businessUnitSelect.value);
+        $(document).ready(function() {
+            if ($('#business_unit').val()) {
+                loadGroups($('#business_unit').val());
             }
+        });
+
+        $('#business_unit').on('change', function() {
+            loadGroups($(this).val());
         });
     </script>
 
+    <script>
+        const organizationData = @json($organization);
 
+        function loadGroups(selectedBU) {
+            $('#companyContainer').empty();
+            if (!selectedBU) return;
 
+            const companyNames = organizationData.filter(org => org.business_unit === selectedBU).map(org => org
+                .company_name);
 
+            const uniqueCompanyNames = [...new Set(companyNames)];
+
+            if (!uniqueCompanyNames.length) {
+                $('#companyContainer').html(
+                    '<p class="text-gray-500 col-span-4">No companies found for this Business Unit.</p>'
+                );
+                return;
+            }
+
+            uniqueCompanyNames.forEach(function(name) {
+                const $div = $('<div>', {
+                    class: 'flex flex-col text-center mb-2'
+                });
+
+                $div.html(`
+                    <label class="text-[10px] font-medium text-gray-600 mb-1">${name}</label>
+                    <input type="hidden" name="company[]" value="${name}">
+                    <input type="number" name="attendance[]" class="appearance-none border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 text-center" placeholder="0" min="0" max="999" oninput="this.value=this.value.slice(0,3)">
+                `);
+
+                $('#companyContainer').append($div);
+            });
+        }
+    </script>
 </x-layout>

@@ -27,21 +27,36 @@ class PobController extends Controller
         return view('pob.index');
     }
 
+    public function list(Request $request)
+    {
+        $business_unit = Organization::get()->pluck('business_unit')->unique()->sort()->values();
+
+        $query = PobRecords::query();
+        if ($request->filled('business_unit')) {
+            $query->where('business_unit', $request->business_unit);
+        }
+        if ($request->filled('date_from') || $request->filled('date_to')) {
+            $from = $request->date_from ?: '1900-01-01';
+            $to = $request->date_to ?: now()->toDateString();
+            $query->whereDate('date', '>=', $from)->whereDate('date', '<=', $to);
+        }
+
+        $poblist = $query->orderBy('date', 'desc')->paginate(10);
+        return view('pob.list', compact('poblist', 'business_unit'));
+    }
+
     public function create()
     {
-        $businessUnits = Organization::select('business_unit')->distinct()->get();
-        return view('pob.create', [
-            'business_unit' => $businessUnits,
-            'dateToday' => \Carbon\Carbon::now()->format('Y-m-d'),
-        ]);
+        $organization = Organization::select('business_unit', 'company_name')->get();
+        $business_unit = $organization->pluck('business_unit')->unique()->sort()->values();
+        return view('pob.create', compact('business_unit', 'organization'));
     }
 
     public function edit(PobRecords $pob)
     {
-        // No need to json_decode if it's already cast to array
-        return view('pob.edit', [
-            'pob' => $pob,
-        ]);
+        $organization = Organization::select('business_unit', 'company_name')->get();
+        $business_unit = $organization->pluck('business_unit')->unique()->sort()->values();
+        return view('pob.edit', compact('business_unit', 'organization', 'pob'));
     }
 
     public function update(Request $request, PobRecords $pob)
@@ -68,7 +83,7 @@ class PobController extends Controller
         ]);
 
         // Redirect back to the index page or wherever you want
-        return redirect()->route('pob.list')->with('success', 'POB record updated successfully!');
+        return back()->with('success', 'POB record updated successfully!');
     }
 
     public function destroy(PobRecords $pob)
@@ -131,36 +146,31 @@ class PobController extends Controller
 
     public function store(Request $request)
     {
-        // Validate required fields
-        $request->validate([
-            'business_unit' => 'required|string|max:255',
-            'date' => 'required|date',
-            'company' => 'required|array',
-            'attendance' => 'required|array',
-        ]);
+        try {
+            $request->validate([
+                'business_unit' => 'required|string|max:255',
+                'date' => 'required|date',
+                'company' => 'required|array',
+                'attendance' => 'required|array',
+            ]);
 
-        $companies = $request->input('company');
-        $attendances = $request->input('attendance');
+            $attendanceData = [];
+            foreach ($request->company as $index => $companyName) {
+                $attendanceData[$companyName] = (int) ($request->attendance[$index] ?? 0);
+            }
 
-        // Combine company names with their attendance values
-        $attendanceData = [];
-        foreach ($companies as $index => $companyName) {
-            $value = isset($attendances[$index]) ? (int) $attendances[$index] : 0;
-            $attendanceData[$companyName] = $value;
-        }
-
-        // Create or update the POB record
-        $record = PobRecords::updateOrCreate(
-            [
+            PobRecords::create([
                 'business_unit' => $request->business_unit,
                 'date' => $request->date,
-            ],
-            [
                 'attendance_data' => $attendanceData,
-            ],
-        );
+            ]);
 
-        return redirect()->route('pob.index')->with('success', 'Attendance data saved successfully!');
+            return redirect()->route('pob.list')->with('success', 'Attendance data saved successfully!');
+        } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+            return back()->with('error', 'Data with this Business Unit and Date already exist in database.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Something went wrong.');
+        }
     }
 
     public function getChartData(Request $request)
@@ -383,36 +393,10 @@ class PobController extends Controller
         ]);
     }
 
-    public function list(Request $request)
+    public function downloadTemplate(Request $request)
     {
-        $query = PobRecords::query();
+        $business_unit = $request->query('business_unit'); // now from ?business_unit=XXX
 
-        // Get all business units for default selection
-        $businessUnits = PobRecords::select('business_unit')->distinct()->pluck('business_unit');
-
-        // Determine which business_unit to filter by
-        $selectedBU = $request->business_unit;
-
-        // Apply Business Unit filter
-        if ($selectedBU) {
-            $query->where('business_unit', $selectedBU);
-        }
-
-        // Date filter
-        if ($request->filled('date_from') || $request->filled('date_to')) {
-            $from = $request->date_from ?: '1900-01-01';
-            $to = $request->date_to ?: now()->toDateString();
-            $query->whereDate('date', '>=', $from)->whereDate('date', '<=', $to);
-        }
-
-        $poblist = $query->orderBy('date', 'desc')->paginate(10);
-        $poblist->appends($request->all());
-
-        return view('pob.list', compact('poblist', 'selectedBU', 'businessUnits'));
-    }
-
-    public function downloadTemplate($business_unit)
-    {
         $companies = Organization::where('business_unit', $business_unit)->pluck('company_name')->toArray();
 
         $spreadsheet = new Spreadsheet();
@@ -422,7 +406,7 @@ class PobController extends Controller
         $header = array_merge(['business_unit', 'date'], $companies);
         $sheet->fromArray($header, null, 'A1');
 
-        // Optional: Add example row
+        // Example row
         $exampleRow = array_merge([$business_unit, now()->format('Y-m-d')], array_fill(0, count($companies), 0));
         $sheet->fromArray($exampleRow, null, 'A2');
 
@@ -452,9 +436,7 @@ class PobController extends Controller
                 return back()->with('error', 'Excel file is empty.');
             }
 
-            // -------------------------------
             // 1. Validate headers
-            // -------------------------------
             $headerRow = array_shift($rows); // remove first row
             $headers = array_values($headerRow); // convert A,B,C... to array index 0,1,2...
 
@@ -462,44 +444,30 @@ class PobController extends Controller
                 return back()->with('error', 'Invalid header format. First two columns must be: business_unit, date.');
             }
 
-            // Attendance column headers (starting from column C)
             $attendanceHeaders = array_slice($headers, 2);
 
-            // -------------------------------
             // 2. Process each row
-            // -------------------------------
             foreach ($rows as $row) {
-                // Convert to numeric index array
                 $rowData = array_values($row);
 
-                // Extract business_unit and date
                 $business_unit = $rowData[0] ?? null;
                 $date = $rowData[1] ?? null;
 
                 if (!$business_unit || !$date) {
-                    // Skip incomplete rows
                     continue;
                 }
 
-                // Convert Excel date properly (if numeric)
                 if (is_numeric($date)) {
                     $date = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($date)->format('Y-m-d');
                 }
 
-                // -------------------------------
-                // 3. Build attendance_data JSON
-                // -------------------------------
                 $attendance = [];
                 foreach ($attendanceHeaders as $index => $companyName) {
-                    $value = $rowData[$index + 2] ?? 0; // +2 because row[0]=BU, row[1]=date
-
-                    // If empty → set 0
+                    $value = $rowData[$index + 2] ?? 0;
                     $attendance[$companyName] = is_numeric($value) ? $value : 0;
                 }
 
-                // -------------------------------
-                // 4. Insert / Upsert
-                // -------------------------------
+                // 3. Insert / Upsert
                 \App\Models\PobRecords::updateOrCreate(
                     [
                         'business_unit' => $business_unit,
@@ -512,8 +480,10 @@ class PobController extends Controller
             }
 
             return back()->with('success', 'Excel uploaded successfully!');
+        } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+            return back()->with('error', 'Some data is already exist in database. Please review your file.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Upload failed: Please check the template and try again');
+            return back()->with('error', 'Something went wrong while uploading the Excel file.');
         }
     }
 }

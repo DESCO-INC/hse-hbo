@@ -1,76 +1,62 @@
 <x-layout>
-    <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-5">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between px-6 py-4">
+    <x-card class="mb-2">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <h2 class="text-lg font-medium text-gray-800">POB Lists</h2>
-            <!-- Button Row (Right) -->
+
             <div class="flex gap-2 mt-4 sm:mt-0">
-                <a href="{{ url('/pob/create') }}"
-                    class="bg-green-500 text-white text-xs px-3 py-2 rounded hover:bg-green-600">
+                <x-button size="sm" href="{{ route('pob.create') }}">
                     Add POB
-                </a>
-                <button type="button" class="bg-green-500 text-white text-xs px-3 py-2 rounded hover:bg-green-600"
-                    onclick="document.getElementById('download-template-modal').classList.remove('hidden')">
+                </x-button>
+
+                <x-button size="sm" id="btn_import" onclick="toggleModal('download-template-modal')">
                     Download Template
-                </button>
-                <button class="bg-green-500 text-white text-xs px-3 py-2 rounded hover:bg-green-600" id="upload-trigger">
+                </x-button>
+
+                <x-button size="sm" onclick="toggleModal('upload-modal')">
                     Import
-                </button>
-                <a href="javascript:void(0);" onclick="window.history.back();"
-                    class="bg-blue-500 text-white text-xs px-3 py-2 rounded hover:bg-blue-600">
-                    Back
-                </a>
-                <a href="{{ route('hbo.index') }}"
-                    class="bg-blue-500 text-white text-xs px-3 py-2 rounded hover:bg-blue-600">
+                </x-button>
+
+                <x-button size="sm" href="{{ route('hbo.index') }}" variant="info">
                     Home
-                </a>
+                </x-button>
             </div>
         </div>
-    </div>
+    </x-card>
 
-    <form action="{{ url()->current() }}" method="GET">
-        <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-3 border border-gray-100">
-            <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 px-6 py-3">
+    <x-card class="mb-2">
+        <form id="pob_filter_form" action="{{ url()->current() }}" method="GET">
+            <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                 <h1 class="text-lg font-semibold text-gray-800 whitespace-nowrap self-center">Filter</h1>
-                <div class="flex flex-wrap items-end gap-4">
 
-                    <!-- Business Unit -->
-                    <div class="flex flex-col">
-                        <label class="text-xs font-medium text-gray-500 mb-1">Business Unit</label>
-                        <select name="business_unit" id="business_unit"
-                            class="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 min-w-[150px]"
-                            {{ Auth::user()->credentials != 'SUPER_ADMIN' ? 'disabled' : '' }}>
-                            <option value="">All Business Units</option>
-                        </select>
-                        @if (Auth::user()->credentials != 'SUPER_ADMIN')
-                            <input type="hidden" name="business_unit" value="{{ Auth::user()->business_unit }}">
-                        @endif
-                    </div>
+                <div class="flex flex-wrap items-end gap-4">
+                    @php
+                        $superAdmin = Auth::user()->credentials == 'SUPER_ADMIN';
+                    @endphp
+                    <x-select label="Business Unit" name="business_unit" size="sm" :value="$superAdmin ? '' : Auth::user()->business_unit"
+                        :readonly="!$superAdmin" :options="['' => 'All Business Unit'] +
+                            $business_unit->mapWithKeys(fn($bu) => [$bu => $bu])->toArray()" />
 
                     <!-- Date From -->
-                    <input name="date_from" id="date_from" type="date"
-                        class="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 min-w-[150px]"
+                    <x-input label="Date From" size="sm" width="30" type="date" name="date_from"
                         value="{{ request('date_from', now()->startOfYear()->format('Y-m-d')) }}" />
 
                     <!-- Date To -->
-                    <input name="date_to" id="date_to" type="date"
-                        class="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 min-w-[150px]"
+                    <x-input label="Date To" size="sm" width="30" type="date" name="date_to"
                         value="{{ request('date_to', now()->format('Y-m-d')) }}" />
 
                     <!-- Filter Button -->
                     <div class="flex flex-col justify-end">
-                        <button type="submit"
-                            class="bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-5 py-2 rounded-md shadow-sm transition whitespace-nowrap">
+                        <x-button type="submit" id="btn_filter">
                             Apply Filter
-                        </button>
+                        </x-button>
                     </div>
-
                 </div>
             </div>
-        </div>
-    </form>
+        </form>
+    </x-card>
 
-    <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-        <div class="px-6 py-5 overflow-x-auto">
+    <x-card class="mb-2">
+        <div class="overflow-x-auto">
             <div class="overflow-x-auto border border-gray-200 rounded">
                 <table class="min-w-full divide-y divide-gray-200 text-sm table-auto">
                     <thead class="bg-green-500 text-white">
@@ -97,17 +83,10 @@
                                 </td>
                                 <td class="px-4 py-2 text-center flex justify-center gap-1">
                                     <!-- View/Edit Button -->
-                                    <a href="{{ url('/pob/' . $pob->id . '/edit') }}"
-                                        class="bg-blue-500 text-white text-xs px-2 py-1 rounded hover:bg-blue-600">
-                                        View
-                                    </a>
-
-                                    <!-- Delete Button -->
-                                    <button type="button"
-                                        class="bg-red-500 text-white text-xs px-2 py-1 rounded hover:bg-red-600"
-                                        onclick="openDeleteModal({{ $pob->id }})">
-                                        Delete
-                                    </button>
+                                    <x-button size="xs" variant="info"
+                                        href="{{ route('pob.edit', $pob->id) }}">
+                                        View / Manage
+                                    </x-button>
                                 </td>
                             </tr>
                         @empty
@@ -124,35 +103,7 @@
                 {{ $poblist->links() }}
             </div>
         </div>
-    </div>
-
-    <!-- Delete Confirmation Modal -->
-    <div id="delete-modal"
-        class="hidden fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-            <h2 class="text-xl font-semibold text-gray-800">Confirm Delete</h2>
-            <p class="mt-2 text-sm text-gray-600">
-                Are you sure you want to delete this POB record? This action cannot be undone.
-            </p>
-
-            <div class="mt-6 flex justify-end space-x-3">
-                <button type="button"
-                    class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition"
-                    onclick="document.getElementById('delete-modal').classList.add('hidden')">
-                    Cancel
-                </button>
-
-                <form id="deleteForm" method="POST">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit"
-                        class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition">
-                        Delete
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
+    </x-card>
 
     <!-- Download Template Modal -->
     <div id="download-template-modal"
@@ -163,12 +114,11 @@
                 Choose a business unit to generate the Excel template.
             </p>
 
-            <form id="downloadTemplateForm" method="GET">
+            <form id="downloadTemplateForm" method="GET" action="{{ route('pob.downloadTemplate') }}">
                 <div class="mt-4">
-                    <x-form-label for="bu_select">Business Unit</x-form-label>
-                    <x-form-select name="business_unit" id="bu_select" required>
-                        <option value="">Loading business units...</option>
-                    </x-form-select>
+                    <x-select label="Business Unit" name="business_unit" size="md" width="full"
+                        :readonly="!$superAdmin" :value="$superAdmin ? '' : Auth::user()->business_unit" :options="['' => 'All Business Unit'] +
+                            $business_unit->mapWithKeys(fn($bu) => [$bu => $bu])->toArray()" />
                 </div>
 
                 <div class="mt-6 flex justify-end space-x-3">
@@ -222,120 +172,35 @@
         </div>
     </div>
 
-
-    @vite('resources/js/chart.js')
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const buSelect = document.getElementById('bu_select');
+        const FILTER_STORAGE_KEY = 'pob_filter_data';
 
-            // Load business units via AJAX
-            fetch('{{ route('org.business_unit') }}')
-                .then(res => res.json())
-                .then(data => {
-                    buSelect.innerHTML = '<option value="">Select Business Unit</option>';
-                    data.forEach(bu => {
-                        const option = document.createElement('option');
-                        option.value = bu; // depends on your controller JSON structure
-                        option.textContent = bu;
-                        buSelect.appendChild(option);
-                    });
-                })
-                .catch(err => {
-                    console.error('Error loading business units:', err);
-                    buSelect.innerHTML = '<option value="">Failed to load business units</option>';
+        $(document).ready(function() {
+            const savedFilters = localStorage.getItem(FILTER_STORAGE_KEY);
+            if (savedFilters) {
+                const filters = JSON.parse(savedFilters);
+
+                Object.keys(filters).forEach(name => {
+                    $(`[name="${name}"]`).val(filters[name]);
                 });
+            }
+        });
+
+        // Apply Filter button
+        $('#btn_filter').on('click', function() {
+            const formData = {};
+            $('#pob_filter_form').serializeArray().forEach(field => {
+                formData[field.name] = field.value;
+            });
+            localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(formData));
+            $('#pob_filter_form').submit();
         });
     </script>
 
     <script>
-        document.getElementById('downloadTemplateForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            const bu = document.getElementById('bu_select').value;
-            if (!bu) return alert('Please select a business unit.');
-
-            // Use the correct named route
-            const url = "{{ route('pob.downloadTemplate', ':bu') }}".replace(':bu', encodeURIComponent(bu));
-
-            // Redirect to download
-            window.location.href = url;
-        });
-    </script>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const businessUnitSelect = document.getElementById('business_unit');
-            const companySelect = document.getElementById('company');
-
-            fetch('{{ route('pob.business_unit') }}')
-                .then(res => res.json())
-                .then(data => {
-                    businessUnitSelect.innerHTML = ''; // Clear existing options
-
-                    const allOption = document.createElement('option');
-                    allOption.value = ''; // Blank value for neutrality
-                    allOption.textContent = 'All Business Unit';
-                    businessUnitSelect.appendChild(allOption);
-
-                    if (!Array.isArray(data) || data.length === 0) {
-                        // Show "No data" if empty
-                        const option = document.createElement('option');
-                        option.value = '';
-                        option.textContent = 'No data';
-                        option.selected = true;
-                        option.disabled = true;
-                        businessUnitSelect.appendChild(option);
-                        return;
-                    }
-
-                    // Populate the select with actual business units
-                    data.forEach((bu, index) => {
-                        const option = document.createElement('option');
-                        option.value = bu;
-                        option.textContent = bu;
-
-                        businessUnitSelect.appendChild(option);
-                    });
-                })
-                .catch(err => {
-                    console.error('Error fetching business units:', err);
-                    // Show fallback "No data" if fetch fails
-                    businessUnitSelect.innerHTML = '';
-                    const option = document.createElement('option');
-                    option.value = '';
-                    option.textContent = 'No data';
-                    option.selected = true;
-                    option.disabled = true;
-                    businessUnitSelect.appendChild(option);
-                });
-        });
-    </script>
-    <script>
-        function openDeleteModal(pobId) {
-            const modal = document.getElementById('delete-modal');
-            const form = document.getElementById('deleteForm');
-
-            // Use Laravel named route with placeholder
-            const url = "{{ route('pob.destroy', ':id') }}".replace(':id', pobId);
-            form.action = url;
-
-            // Show the modal
-            modal.classList.remove('hidden');
+        function toggleModal(modalId) {
+            $('#' + modalId).toggleClass('hidden');
         }
     </script>
-    <script>
-        document.getElementById('upload-trigger').addEventListener('click', function() {
-            document.getElementById('upload-modal').classList.remove('hidden');
-        });
-
-        // Spinner on submit
-        document.getElementById('uploadForm').addEventListener('submit', function() {
-            document.getElementById('spinner').classList.remove('hidden');
-            document.getElementById('uploadBtnText').classList.add('hidden');
-            document.getElementById('uploadBtn').setAttribute('disabled', true);
-        });
-    </script>
-
-
 
 </x-layout>

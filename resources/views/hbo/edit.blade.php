@@ -1,235 +1,208 @@
 <x-layout>
-    <div
-        class="flex justify-between items-center mb-5 bg-white rounded-2xl shadow-sm border border-gray-200 px-6 py-4 transition-all duration-300">
-        <h2 class="text-lg font-medium text-gray-800">View / Manage HBO</h2>
+    <x-card class="mb-2">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+            <h2 class="text-lg font-medium text-gray-800">View/Manage HBO</h2>
+            <div class="flex gap-2 mt-4 sm:mt-0">
+                <x-button size="sm" href="{{ route('hbo.list') }}" variant="info">
+                    Back
+                </x-button>
 
-        <div>
-            <a href="javascript:void(0);" onclick="window.history.back();"
-                class="bg-blue-500 text-white text-xs px-3 py-2 rounded hover:bg-blue-600">
-                Back
-            </a>
-
-            <a href="{{ route('hbo.index') }}"
-                class="bg-blue-500 text-white text-xs px-3 py-2 rounded hover:bg-blue-600 mx-1">
-                Home
-            </a>
+                <x-button size="sm" href="{{ route('hbo.index') }}" variant="info">
+                    Home
+                </x-button>
+            </div>
         </div>
-    </div>
+    </x-card>
 
-    <div id="mainContainer">
 
-        <form id="formHazard_update" method="POST" action="{{ route('hbo.update', $hbo->id) }}"
-            class="grid grid-cols-1 md:grid-cols-3 md:grid-rows-2 gap-6 transition-all duration-300">
-            @csrf
-            @method('PUT')
-            {{-- HBO FORM --}}
-            <div
-                class="col-span-2 row-span-2 bg-white rounded-2xl shadow-sm border border-gray-200 p-6 transition-all duration-300">
-                <!-- HEADER -->
-                <div class="flex justify-between items-center border-b border-gray-200 pb-4 mb-4">
-                    <h1 class="text-xl font-semibold text-gray-800">HBO No. : <span
-                            class="font-bold">{{ $hbo->id }}</span></h1>
-                    <span
-                        class="px-4 py-1 text-sm font-semibold rounded-full bg-green-100 text-green-800 border border-gray-300">
-                        {{ $hbo->status }}
-                    </span>
+    <form id="formHazard_update" method="POST" action="{{ route('hbo.update', $hbo->id) }}"
+        class="grid grid-cols-1 md:grid-cols-3 md:grid-rows-2 gap-6 transition-all duration-300">
+        @csrf
+        @method('PUT')
+        {{-- HBO FORM --}}
+        <x-card class="col-span-2 row-span-2 mb-2">
+            <!-- HEADER -->
+            <div class="flex justify-between items-center border-b border-gray-200 pb-4 mb-4">
+                <h1 class="text-xl font-semibold text-gray-800">HBO No. : <span
+                        class="font-bold">{{ $hbo->id }}</span></h1>
+                <span
+                    class="px-4 py-1 text-sm font-semibold rounded-full bg-green-100 text-green-800 border border-gray-300">
+                    {{ $hbo->status }}
+                </span>
+            </div>
+
+            <!-- FORM -->
+            <fieldset id="hazardForm" class="grid grid-cols-1 md:grid-cols-4 gap-y-4 gap-x-6" disabled>
+
+                <!-- Business Unit -->
+                @php
+                    $superAdmin = Auth::user()->credentials == 'SUPER_ADMIN';
+                @endphp
+                <div class="relative col-span-2">
+                    <x-select label="Business Unit" name="business_unit" size="lg" width="full" :value="$superAdmin ? '' : Auth::user()->business_unit"
+                        :readonly="!$superAdmin" :options="['' => 'Select Business Unit'] +
+                            array_combine($data['Business_unit'], $data['Business_unit'])" />
                 </div>
 
-                <!-- FORM -->
-                <fieldset id="hazardForm" class="grid grid-cols-1 md:grid-cols-4 gap-y-4 gap-x-6" disabled>
-                    <!-- Business Unit -->
-                    <div class="relative col-span-2">
-                        <x-select name="business_unit" :options="[]" :value="old('business_unit', $hbo->business_unit ?? '')"
-                            addedClass="{{ Auth::user()->credentials != 'SUPER_ADMIN' ? 'bg-gray-300 pointer-events-none' : '' }}">
-                            Business Unit
-                        </x-select>
-                    </div>
+                <!-- Company -->
+                <div class="relative col-span-2">
+                    <x-select label="Group" name="company" size="lg" width="full" :options="['' => 'Select Group']" />
+                </div>
 
-                    <!-- Company -->
-                    <div class="relative col-span-2">
-                        <x-select name="company" :options="['' => 'please select a Business unit first']">
-                            Company
-                        </x-select>
-                    </div>
+                <!-- Type -->
+                <div class="col-span-2">
+                    <x-select label="Type" name="type" size="lg" width="full" :options="['' => 'Select Type'] + array_combine($data['Types'], $data['Types'])"
+                        value="{{ $hbo->type }}" />
+                </div>
 
-                    <!-- Type -->
-                    <div class="relative col-span-2">
-                        <x-select name="type" :options="['' => 'Select Type'] + array_combine($types, $types)" :value="old('type', $hbo->type ?? '')">
-                            Type
-                        </x-select>
-                    </div>
+                <!-- Category -->
+                <div class="col-span-2">
+                    <x-select label="Category" name="category" size="lg" width="full" :options="['' => 'Select Category'] + array_combine($data['Categories'], $data['Categories'])"
+                        value="{{ $hbo->category }}" />
+                </div>
 
-                    <!-- Category -->
-                    <div class="relative col-span-2">
-                        <x-select name="category" id="category" :options="['' => 'Select Category'] +
-                            collect($categories)->keys()->mapWithKeys(fn($k) => [$k => $k])->toArray()" :value="old('category', $hbo->category ?? '')">
-                            Category
-                        </x-select>
-                    </div>
+                <!-- Sub Category -->
+                <div class="col-span-2">
+                    <x-select label="Sub Category" name="sub_category" size="lg" width="full"
+                        :options="['' => 'Select Sub Category']" />
+                </div>
 
-                    <!-- Sub Category -->
-                    <div class="relative col-span-2">
-                        <x-select name="sub_category" id="sub_category" :options="['' => 'Select a Category first']" :value="old('sub_category', $hbo->sub_category ?? '')">
-                            Sub Category
-                        </x-select>
-                    </div>
+                <!-- Dates -->
+                <div>
+                    <x-input label="Date Raised" size="lg" width="30" type="date" name="date_raised"
+                        value="{{ request('date_to', now()->format('Y-m-d')) }}" value="{{ $hbo->date_raised }}"
+                        required />
+                </div>
 
-                    <!-- Dates -->
-                    <div>
-                        <x-input name="date_raised" type="date" :value="$hbo->date_raised">
-                            Date Raised
-                        </x-input>
-                    </div>
+                <div>
+                    <x-input label="Due Date" size="lg" width="30" type="date" name="date_due"
+                        value="{{ $hbo->date_due }}" required />
+                </div>
 
-                    <div>
-                        <x-input name="date_due" type="date" :value="$hbo->date_due">
-                            Due Date
-                        </x-input>
-                    </div>
+                <!-- SWA -->
+                <div class="col-span-2">
+                    <x-select label="SWA" name="SWA" size="lg" width="full" :options="['' => 'Select SWA'] + array_combine($data['SWA'], $data['SWA'])"
+                        value="{{ $hbo->SWA }}" />
+                </div>
 
-                    <!-- SWA -->
-                    <div class="relative col-span-2">
-                        <x-select name="SWA" id="SWA" :options="['' => 'Select SWA'] + array_combine($swa_sro['SWA'], $swa_sro['SWA'])" :value="old('SWA', $hbo->SWA ?? '')">
-                            SWA
-                        </x-select>
-                    </div>
+                <!-- SRO -->
+                <div class="col-span-2">
+                    <x-select label="SRO" name="SRO" size="lg" width="full" :options="['' => 'Select SRO'] + array_combine($data['SRO'], $data['SRO'])"
+                        value="{{ $hbo->SRO }}" />
+                </div>
 
-                    <!-- SRO -->
-                    <div class="relative col-span-2">
-                        <x-select name="SRO" id="SRO" :options="['' => 'Select SRO'] + array_combine($swa_sro['SRO'], $swa_sro['SRO'])" :value="old('SRO', $hbo->SRO ?? '')">
-                            SRO
-                        </x-select>
-                    </div>
+                <!-- Reporter Info -->
+                <div class="col-span-2">
+                    <x-input label="Reported By" size="lg" width="full" name="reported_by"
+                        value="{{ $hbo->reported_by }}" />
+                </div>
 
-                    <!-- Reporter Info -->
-                    <div class="col-span-2">
-                        <x-input name="reported_by" :value="$hbo->reported_by">
-                            Reported By
-                        </x-input>
-                    </div>
+                <div class="col-span-2">
+                    <x-select label="Reported To" name="reported_to" size="lg" width="full" :options="['' => 'Select User'] + array_combine($data['Users'], $data['Users'])"
+                        value="{{ $hbo->reported_to }}" />
+                </div>
 
-                    <div class="col-span-2">
-                        <x-input name="reported_by" :value="$hbo->reported_to">
-                            Reported To
-                        </x-input>
-                    </div>
+                <!-- Description -->
+                <div class="md:col-span-2">
+                    <x-textarea label="Hazard Description" name="hazard_description"
+                        value="{{ $hbo->hazard_description }}" />
+                </div>
 
-                    <!-- Description -->
-                    <div class="md:col-span-2">
-                        <x-form-label for="hazard_description">Hazard Description</x-form-label>
-                        <textarea id="hazard_description" name="hazard_description" rows="4"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">{{ ucfirst(strtolower($hbo->hazard_description)) }}</textarea>
-                        <x-form-error name="hazard_description" />
-                    </div>
+                <div class="md:col-span-2">
+                    <x-textarea label="Recommendation" name="recommendation" value="{{ $hbo->recommendation }}" />
+                </div>
 
-                    <div class="md:col-span-2">
-                        <x-form-label for="recommendation">Recommendation</x-form-label>
-                        <textarea id="recommendation" name="recommendation" rows="4"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">{{ ucfirst(strtolower($hbo->recommendation)) }}</textarea>
-                        <x-form-error name="recommendation" />
-                    </div>
+                <div class="md:col-span-4">
+                    @php
+                        $photos = $hbo->hbo_photo;
 
-                    <div class="md:col-span-4">
-                        <x-form-label for="hbo_photo">
-                            Picture (Paste the link of the Photo use , comma symbol as seperator for multiple photo)
-                        </x-form-label>
-                        @php
-                            $photos = $hbo->hbo_photo;
+                        if (is_string($photos)) {
+                            $decoded = json_decode($photos, true);
+                            $photos = is_array($decoded) ? $decoded : $photos;
+                        }
 
-                            if (is_string($photos)) {
-                                $decoded = json_decode($photos, true);
-                                $photos = is_array($decoded) ? $decoded : $photos;
-                            }
+                        $photoValue = is_array($photos) ? implode(', ', $photos) : $photos;
+                    @endphp
+                    <x-input
+                        label="Picture (Paste the link of the Photo use , comma symbol as seperator for multiple photo)"
+                        size="lg" width="full" name="hbo_photo" value="{{ $photoValue ?? '' }}" />
+                </div>
+            </fieldset>
+            <!-- Buttons -->
+            <div class="md:col-span-4
+                        mt-6 flex flex-wrap gap-2">
+                <!-- Edit Button -->
+                <button type="button" id="editBtn" onclick="toggleEditInformation()"
+                    class="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 transition">
+                    Edit Information
+                </button>
 
-                            $photoValue = is_array($photos) ? implode(', ', $photos) : $photos;
-                        @endphp
+                <button type="button" id="cancelBtn" onclick="toggleEditInformation()"
+                    class="px-4 py-2 rounded bg-gray-300 text-gray-800 hover:bg-gray-400 transition hidden">
+                    Cancel
+                </button>
 
-                        <x-form-input id="hbo_photo" name="hbo_photo" value="{{ $photoValue ?? '' }}" />
-                        <x-form-error name='hbo_photo' />
-                    </div>
-                </fieldset>
-                <!-- Buttons -->
-                <div class="md:col-span-4 mt-6 flex flex-wrap gap-2">
-                    <!-- Edit Button -->
-                    <button type="button" id="editBtn"
-                        class="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 transition">
-                        Edit Information
-                    </button>
+                <!-- Save Button -->
+                <button type="submit" id="saveBtn"
+                    class="px-4 py-2 rounded bg-emerald-600 text-white hover:bg-emerald-700 transition hidden">
+                    Save Changes
+                </button>
 
-                    <!-- Save Button -->
-                    <button type="submit" id="saveBtn"
-                        class="px-4 py-2 rounded bg-emerald-600 text-white hover:bg-emerald-700 transition hidden">
-                        Save Changes
-                    </button>
-
-                    <!-- Delete Button -->
-                    <button type="button" id="deleteBtn"
-                        class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 transition {{ Auth::user()->credentials == 'user' ? 'hidden' : '' }}">
+                <!-- Delete Button -->
+                @if (Auth::user()->credentials == 'SUPER_ADMIN')
+                    <x-button size="lg" variant="error" id="deleteBtn" onclick="toggleModal('delete-modal')">
                         Delete
-                    </button>
+                    </x-button>
+                @endif
 
-                    @if ($hbo->status === 'ONGOING')
-                        <button type="button" id="takeActionBtn"
-                            class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition  {{ Auth::user()->credentials == 'user' ? 'hidden' : '' }}">
-                            Take Action
-                        </button>
-                    @elseif ($hbo->status === 'FOR VERIFICATION')
-                        <button type="button" id="takeVerifyBtn"
-                            class="px-4 py-2 rounded bg-purple-600 text-white hover:bg-purple-700 transition  {{ Auth::user()->credentials == 'user' ? 'hidden' : '' }}">
-                            Verify
-                        </button>
-                    @endif
+                @if ($hbo->status === 'ONGOING')
+                    <x-button size="lg" variant="info" id="takeActionBtn"
+                        onclick="toggleModal('modal_action')">
+                        Take Action
+                    </x-button>
+                @elseif ($hbo->status === 'FOR VERIFICATION' && Auth::user()->credentials != 'STAFF')
+                    <x-button size="lg" variant="purple" id="takeVerifyBtn"
+                        onclick="toggleModal('modal_verify')">
+                        Verify
+                    </x-button>
+                @endif
+            </div>
+        </x-card>
 
-                    <button type="button" id="cancelBtn"
-                        class="px-4 py-2 rounded bg-gray-300 text-gray-800 hover:bg-gray-400 transition hidden">
-                        Cancel
-                    </button>
+        <x-card class="col-start-3 row-start-1 mb-2">
+
+            <h2 class="text-lg font-semibold text-gray-800 mb-3">Action Taken</h2>
+            <fieldset id="actionForm" class="" disabled>
+                <div class="mb-2">
+                    <x-input label="Action Date" name="action_date" type="date" :value="$hbo->action_date"/>
                 </div>
-            </div>
+                <div class="mb-2">
+                    <x-input label="Action By" name="action_by" :value="$hbo->action_by"/>
+                </div>
+                <div class="mb-2">
+                    <x-textarea label="Action Taken" name="action_remarks" value="{{ $hbo->action_remarks }}" />
+                </div>
+            </fieldset>
+        </x-card>
 
-            <div id="actionCard"
-                class="col-start-3 row-start-1 bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-4">
-                <h2 class="text-lg font-semibold text-gray-800 mb-4">Action Taken</h2>
-                <fieldset id="actionForm" class="" disabled>
-                    <div>
-                        <x-input name="action_date" type="date" :value="$hbo->action_date">
-                            Action Date
-                        </x-input>
-                    </div>
-                    <div>
-                        <x-input name="action_by" :value="$hbo->action_by">
-                            Action By
-                        </x-input>
-                    </div>
-                    <div class="">
-                        <x-form-label for="action_remarks">Action Taken</x-form-label>
-                        <textarea id="action_remarks" name="action_remarks" class="w-full border border-gray-300 rounded px-3 py-2">{{ $hbo->action_remarks ?? '' }}</textarea>
-                    </div>
-                </fieldset>
-            </div>
+        <x-card class="col-start-3 row-start-2 mb-2">
 
-            <div id="verifyCard"
-                class="col-start-3 row-start-2 bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-4">
-                <h2 class="text-lg font-semibold text-gray-800 mb-4">Verification</h2>
-                <fieldset id="verifyForm" class="" disabled>
-                    <div>
-                        <x-input name="verified_date" type="date" :value="$hbo->verified_date">
-                            Verified Date
-                        </x-input>
-                    </div>
-                    <div>
-                        <x-input name="verified_by" :value="$hbo->verified_by">
-                            Verified By
-                        </x-input>
-                    </div>
-                    <div class="">
-                        <x-form-label for="verified_remarks">Verification Remarks</x-form-label>
-                        <textarea id="verified_remarks" name="verified_remarks" class="w-full border border-gray-300 rounded px-3 py-2">{{ $hbo->verified_remarks ?? '' }}</textarea>
-                    </div>
-                </fieldset>
-            </div>
-        </form>
-    </div>
+            <h2 class="text-lg font-semibold text-gray-800 mb-3">Verification</h2>
+            <fieldset id="verifyForm" class="" disabled>
+                <div class="mb-2">
+                    <x-input label="Verified Date" type="date" name="verified_date" :value="$hbo->verified_date"/>
+                </div>
+                <div class="mb-2">
+                    <x-input label="Verified By" name="verified_by" :value="$hbo->verified_by"/>
+                </div>
+                <div class="mb-2">
+                    <x-textarea label="Verification Remarks" name="verified_remarks"
+                        value="{{ $hbo->verified_remarks }}" />
+                </div>
+            </fieldset>
+        </x-card>
+
+    </form>
 
     <!-- Delete Confirmation Modal -->
     <div id="delete-modal"
@@ -282,15 +255,14 @@
                         </x-input>
                     </div>
                     <div>
-                        <x-form-label for="action_remarks">Action Taken</x-form-label>
-                        <textarea id="action_remarks" name="action_remarks" class="w-full border border-gray-300 rounded px-3 py-2 text-sm"></textarea>
+                        <x-textarea label="Action Taken" name="action_remarks" value="{{ $hbo->action_remarks }}" />
                     </div>
 
                 </div>
 
                 <div class="flex justify-end gap-3 mt-6">
 
-                    <button type="button" id="cancelAction" onclick="$('#modal_action').addClass('hidden');"
+                    <button type="button" id="cancelAction" onclick="toggleModal('modal_action')"
                         class="px-4 py-2 text-sm rounded border border-gray-300 hover:bg-gray-100">
                         Cancel
                     </button>
@@ -326,9 +298,8 @@
                         </x-input>
                     </div>
                     <div>
-                        <x-form-label for="verified_remarks">Verification Remarks</x-form-label>
-                        <textarea id="verified_remarks" name="verified_remarks"
-                            class="w-full border border-gray-300 rounded px-3 py-2 text-sm"></textarea>
+                        <x-textarea label="Verification Remarks" name="verified_remarks"
+                            value="{{ $hbo->verified_remarks }}" />
                     </div>
                 </div>
                 <div class="flex justify-end gap-3 mt-6">
@@ -347,167 +318,79 @@
     </div>
 
     <script>
-        const userCredentials = @json(old('credentials', Auth::user()->credentials ?? null));
-        const categories = @json($categories); // Pass full categories/subcategories array
-        const existingSubCategory = @json(old('sub_category', $hbo->sub_category ?? null));
-        const existingactiontaken = @json(old('action_remarks', $hbo->action_remarks ?? null));
-        const existingverification = @json(old('verified_remarks', $hbo->verified_remarks ?? null));
-    </script>
-
-    <script>
+        const DataCompany = "{{ $hbo->company ?? '' }}";
+        const DataSubcategory = "{{ $hbo->sub_category ?? '' }}";
         $(document).ready(function() {
-            const $form1 = $('#formHazard_update');
-            const $fieldset = $('#hazardForm');
-            const $fieldset2 = $('#actionForm');
-            const $fieldset3 = $('#verifyForm');
-            const $btn_edit = $('#editBtn');
-            const $btn_save = $('#saveBtn');
-            const $btn_delete = $('#deleteBtn');
-            const $btn_cancel = $('#cancelBtn');
+            const selectedBU = $('#business_unit').val();
+            if (selectedBU) {
+                loadGroups(selectedBU, DataCompany);
+            }
 
-            // Edit button click: enable editing
-            $btn_edit.on('click', function() {
-                $fieldset.prop('disabled', false); // Enable all fields
-                if (existingactiontaken) {
-                    $fieldset2.prop('disabled', false);
-                }
-                if (existingverification) {
-                    $fieldset3.prop('disabled', false);
-                }
-                $btn_save.show(); // Show Save button
-                $btn_cancel.show(); // Show Cancel button
-                $btn_edit.hide(); // Hide Edit button while editing
-            });
-
-            // Cancel button click: revert editing
-            $btn_cancel.on('click', function() {
-                $fieldset.prop('disabled', true); // Disable fields
-                $btn_save.hide(); // Hide Save button
-                $btn_cancel.hide(); // Hide Cancel button
-                $btn_edit.show(); // Show Edit button again
-            });
-
-            // Cancel button click: revert editing
-            $btn_delete.on('click', function() {
-                $('#delete-modal').removeClass('hidden');
-            });
-
-            $('#takeActionBtn').on('click', function() {
-                $('#modal_action').removeClass('hidden');
-
-            });
-
-            $('#takeVerifyBtn').on('click', function() {
-                $('#modal_verify').removeClass('hidden');
-            });
-        });
-
-        $(document).ready(function() {
-            const $selectBU = $('#business_unit');
-            const $selectCategory = $('#category');
-
-            fetch_BusinessUnit();
-            $selectBU.on('change', function() {
-                const selectedBU = $(this).val();
-                fetchCompanies(selectedBU); // no restore value here
-            });
-
-            $selectCategory.on('change', function() {
-                fetchSubCategory(this.value);
-            });
-
-            // Trigger initially if editing existing data
-            if ($('#category').val()) {
-                fetchSubCategory($('#category').val());
+            const selectedCat = $('#category').val();
+            if (selectedCat) {
+                loadSubcategories(selectedCat, DataSubcategory);
             }
         });
 
-        function fetch_BusinessUnit() {
-            const existingBU = @json(old('business_unit', $hbo->business_unit ?? null));
+        $('#business_unit').on('change', function() {
+            const DataCompany = "{{ $hbo->company ?? '' }}";
+            loadGroups($(this).val(), DataCompany);
+        });
 
-            $.ajax({
-                url: '{{ route('hbo.business_unit') }}',
-                method: 'GET',
-                dataType: 'json',
-                success: function(data) {
-                    const $select = $('#business_unit');
-                    $select.empty();
+        $('#category').on('change', function() {
+            loadSubcategories($(this).val(), DataSubcategory);
+            console.log($(this).val());
+        });
+    </script>
 
-                    // Placeholder option
-                    $select.append($('<option>', {
-                        value: '',
-                        text: 'All Business Unit'
-                    }));
+    <script>
+        function toggleModal(modalId) {
+            $('#' + modalId).toggleClass('hidden');
+        }
 
-                    data.forEach(unit => {
-                        $select.append($('<option>', {
-                            value: unit,
-                            text: unit,
-                            selected: unit === existingBU // <-- set the existing value
-                        }));
-                    });
+        function toggleEditInformation() {
+            $('#editBtn').toggleClass('hidden');
+            $('#saveBtn').toggleClass('hidden');
+            $('#cancelBtn').toggleClass('hidden');
+            $('#hazardForm').prop('disabled', !$('#hazardForm').prop('disabled'));
+            $('#actionForm').prop('disabled', !$('#actionForm').prop('disabled'));
+            $('#verifyForm').prop('disabled', !$('#verifyForm').prop('disabled'));
+        }
 
-                    // Trigger change if you want to load the company list immediately
-                    if (existingBU) {
-                        fetchCompanies(existingBU);
-                    }
-                }
+        const $organization = @json($organization);
+
+        function loadGroups(selectedBU, selectedCompany = null) {
+            const companyNames = $organization
+                .filter(org => org.business_unit === selectedBU)
+                .map(org => org.company_name);
+
+            const uniqueCompanyNames = [...new Set(companyNames)];
+
+            const $companySelect = $('select[name="company"]');
+            $companySelect.empty();
+            $companySelect.append('<option value="">Select Group</option>');
+
+            uniqueCompanyNames.forEach(name => {
+                const isSelected = selectedCompany && selectedCompany === name ? 'selected' : '';
+                $companySelect.append(`<option value="${name}" ${isSelected}>${name}</option>`);
             });
         }
 
-        function fetchCompanies(selectedBU) {
-            if (!selectedBU) return;
+        const $categories = @json($categoriesRaw);
 
-            const existingCompany = @json(old('company', $hbo->company ?? null));
+        function loadSubcategories(selectedCategory, selectedSubCategory = null) {
+            const categoryData = $categories[selectedCategory];
 
-            $.ajax({
-                url: '{{ route('hbo.companies', ['business_unit' => 'BU']) }}'
-                    .replace('BU', encodeURIComponent(selectedBU)),
-                method: 'GET',
-                dataType: 'json',
-                success: function(data) {
-
-                    const $select = $('#company');
-                    $select.empty();
-
-                    // Placeholder option
-                    $select.append($('<option>', {
-                        value: '',
-                        text: 'All Groups'
-                    }));
-
-                    data.forEach(unit =>
-                        $select.append($('<option>', {
-                            value: unit,
-                            text: unit,
-                            selected: unit === existingCompany // <-- select existing value
-                        }))
-                    );
-                }
-            });
-        }
-
-        function fetchSubCategory(category) {
-            const $selectSubCategory = $('#sub_category');
-            $selectSubCategory.empty();
-
-            // Placeholder
-            $selectSubCategory.append($('<option>', {
-                value: '',
-                text: 'Select Sub Category'
-            }));
-
-            if (!category || !categories[category]) return;
-
-            const subs = categories[category].subcategories || [];
-
-            Object.keys(subs).forEach(sub => {
-                $selectSubCategory.append($('<option>', {
-                    value: sub,
-                    text: sub,
-                    selected: sub === existingSubCategory
-                }));
-            });
+            const $subcategorySelect = $('#sub_category');
+            $subcategorySelect.empty();
+            $subcategorySelect.append('<option value="">Select Sub Category</option>');
+            if (categoryData && categoryData.subcategories) {
+                const subcategoryNames = Object.keys(categoryData.subcategories);
+                subcategoryNames.forEach(name => {
+                    const isSelected = selectedSubCategory && selectedSubCategory === name ? 'selected' : '';
+                    $subcategorySelect.append(`<option value="${name}" ${isSelected}>${name}</option>`);
+                });
+            }
         }
     </script>
 </x-layout>

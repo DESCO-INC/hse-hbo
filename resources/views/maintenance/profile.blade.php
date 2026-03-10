@@ -1,5 +1,15 @@
 <x-layout>
-    <h1 class="text-xl font-semibold text-gray-800 mb-5">PROFILE</h1>
+    <x-card>
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+            <h2 class="text-lg font-medium text-gray-800">PROFILE</h2>
+
+            <div class="flex gap-2 mt-4 sm:mt-0">
+                <x-button size="sm" href="{{ route('hbo.index') }}" variant="info">
+                    Home
+                </x-button>
+            </div>
+        </div>
+    </x-card>
 
     @php
         $editing = request()->get('edit') == 1;
@@ -37,45 +47,33 @@
             <!-- User Info -->
             <div class="col-span-3 space-y-4">
                 <div>
-                    <x-form-label for="name">Name</x-form-label>
-                    <input type="text" id="name" name="name" value="{{ auth()->user()->name }}"
-                        class="border border-gray-300 rounded-md px-3 py-2 w-full" {{ $editing ? '' : 'readonly' }} required/>
+                    <x-input label="Name" size="lg" width="full" name="name"
+                        value="{{ auth()->user()->name }}" readonly="{{ !$editing }}" required />
                 </div>
 
                 <div>
-                    <x-form-label for="email">Email</x-form-label>
-                    <input type="email" id="email" name="email" value="{{ auth()->user()->email }}"
-                        class="border border-gray-300 rounded-md px-3 py-2 w-full" {{ $editing ? '' : 'readonly' }} required/>
+                    <x-input label="Email" size="lg" width="full" type="email" name="email"
+                        value="{{ auth()->user()->email }}" readonly="{{ !$editing }}" required />
                 </div>
 
-                <div class="{{Auth::user()->credentials === 'SUPER_ADMIN' ? '' : 'hidden'}}">
-                    <x-form-label for="credentials">Credentials</x-form-label>
-                    <select name="credentials" id="credentials"
-                        class="border border-gray-300 rounded-md px-3 py-2 text-sm text-black-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 w-full"
-                        {{ $editing ? '' : 'disabled' }}>
-                        <option value="SUPER_ADMIN" {{ Auth::user()->credentials == 'SUPER_ADMIN' ? 'selected' : '' }}>
-                            SUPER ADMIN</option>
-                        <option value="ADMIN" {{ Auth::user()->credentials == 'ADMIN' ? 'selected' : '' }}>ADMIN
-                        </option>
-                        <option value="STAFF" {{ Auth::user()->credentials == 'STAFF' ? 'selected' : '' }}>STAFF
-                        </option>
-                    </select>
+                <div class="{{ Auth::user()->credentials === 'SUPER_ADMIN' ? '' : 'hidden' }}">
+                    <x-select label="Credentials" name="credentials" size="lg" width="full"
+                        :options="[
+                            '' => 'Select Credentials',
+                            'SUPER_ADMIN' => 'SUPER ADMIN',
+                            'ADMIN' => 'ADMIN',
+                            'STAFF' => 'STAFF',
+                        ]" :selected="old('credentials', Auth::user()->credentials)" :value="Auth::user()->credentials" readonly="{{ !$editing }}" />
                 </div>
 
                 <!-- Password Fields (only show when editing) -->
                 @if ($editing)
                     <div class="space-y-2">
                         <div>
-                            <x-form-label for="password">New Password</x-form-label>
-                            <x-form-input id="password" name="password" type="password"
-                                placeholder="Leave blank to keep current password" />
-                            <x-form-error name='password' />
+                            <x-input label="New Password" size="lg" width="full" type="password" name="password" placeholder="Leave blank to keep current password" />
                         </div>
                         <div>
-                            <x-form-label for="password_confirmation">Confirm Password</x-form-label>
-                            <x-form-input id="password_confirmation" name="password_confirmation" type="password"
-                                placeholder="Leave blank to keep current password" />
-                            <x-form-error name='password_confirmation' />
+                            <x-input label="Confirm Password" size="lg" width="full" type="password" name="password_confirmation" placeholder="Leave blank to keep current password" />
                         </div>
                     </div>
 

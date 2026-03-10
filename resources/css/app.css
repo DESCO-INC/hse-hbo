@@ -1,5 +1,17 @@
 @import 'tailwindcss';
 
+@layer base {
+    :root {
+        --color-primary: #00c950;
+        --color-secondary: #FFFFFF;
+        --color-accent: #00a63e;
+        
+        --color-primary-hover: #02a242;
+        --color-secondary-hover: #b7b6b6;
+        --color-accent-hover: #018933;
+    }
+}
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
