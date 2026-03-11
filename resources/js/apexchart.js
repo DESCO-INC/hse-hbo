@@ -662,3 +662,156 @@ window.renderWeeklySummaryChart = function (data) {
 
     window.weeklySummaryChart.render();
 }
+
+window.renderPobVsHboChart = function (data) {
+    const groups = Array.from(new Set([
+        ...Object.keys(data.POB || {}),
+        ...Object.keys(data.HBO || {})
+    ])).sort();
+
+    const series = [
+        {
+            name: 'POB',
+            data: groups.map(group => data.POB[group] || 0)
+        },
+        {
+            name: 'HBO',
+            data: groups.map(group => data.HBO[group] || 0)
+        }
+    ];
+
+    if (window.pobVsHboChart) {
+        window.pobVsHboChart.destroy();
+    }
+
+    const options = {
+        chart: {
+            type: 'bar',
+            height: '95%',
+            stacked: false,
+            toolbar: { show: true }
+        },
+        plotOptions: {
+            bar: {
+                horizontal: true,
+                barHeight: '80%',
+                borderRadius: 4,
+                dataLabels: {
+                    position: 'top'
+                }
+            }
+        },
+        dataLabels: {
+            enabled: true,
+            formatter: val => val,
+            style: { fontSize: '10px', colors: ['#000'] },
+            offsetX: 5
+        },
+        xaxis: {
+            categories: groups,   // ✅ group names go here
+            labels: {
+                style: { fontSize: '10px', colors: '#374151' }
+            }
+        },
+        yaxis: {
+            labels: {
+                style: { fontSize: '10px', colors: '#374151' }
+            }
+        },
+        legend: {
+            position: 'top',
+            horizontalAlign: 'left'
+        },
+        tooltip: {
+            y: { formatter: val => val }
+        },
+        series: series,
+        colors: ['#10B981', '#3B82F6']
+    };
+
+    window.pobVsHboChart = new ApexCharts(document.querySelector("#hbo-vs-pob"), options);
+    window.pobVsHboChart.render();
+};
+
+
+window.renderPobVsHboWeeklyChart = function (data) {
+    // Extract daily dates
+    const dates = data.POB.map(d => d.date);
+
+    // Append 'Summary' at the end of categories
+    const categories = [...dates, 'Ave. POB / Total HBO'];
+
+    // Series for POB and HBO
+    const series = [
+        {
+            name: 'POB',
+            data: [...data.POB.map(d => d.average), data.POB_average] // append weekly average at the end
+        },
+        {
+            name: 'HBO',
+            data: [...data.HBO.map(d => d.total), data.HBO_total] // append weekly total at the end
+        }
+    ];
+
+    // Destroy existing chart if exists
+    if (window.pobVsHboWeeklyChart) {
+        window.pobVsHboWeeklyChart.destroy();
+    }
+
+    const options = {
+        chart: {
+            type: 'bar',
+            height: '95%',
+            stacked: false,
+            toolbar: { show: true }
+        },
+        plotOptions: {
+            bar: {
+                horizontal: false,
+                columnWidth: '50%',
+                borderRadius: 4,
+                dataLabels: {
+                    position: 'top'
+                }
+            }
+        },
+        dataLabels: {
+            enabled: true,
+            formatter: val => val,
+            style: { fontSize: '12px', colors: ['#000'] },
+            offsetY: -14
+        },
+        series: series,
+        xaxis: {
+            categories: categories,
+            labels: { style: { fontSize: '10px', colors: '#374151' } }
+        },
+        yaxis: {
+            labels: { style: { fontSize: '10px', colors: '#374151' } }
+        },
+        legend: {
+            position: 'top',
+            horizontalAlign: 'left'
+        },
+        tooltip: {
+            shared: true,       // show both POB and HBO in same tooltip
+            intersect: false,   // required when shared is true
+            y: {
+                formatter: function (val, { seriesIndex, dataPointIndex, w }) {
+                    // Customize tooltip for last column
+                    if (dataPointIndex === w.globals.labels.length - 1) {
+                        return seriesIndex === 0
+                            ? `Ave. POB: ${val}`
+                            : `Total HBO: ${val}`;
+                    }
+                    return val;
+                }
+            }
+        },
+        colors: ['#10B981', '#3B82F6'], // only 2 colors now
+        grid: { xaxis: { lines: { show: true } } }
+    };
+
+    window.pobVsHboWeeklyChart = new ApexCharts(document.querySelector("#hbo-vs-pob-weekly"), options);
+    window.pobVsHboWeeklyChart.render();
+};

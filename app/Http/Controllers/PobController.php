@@ -24,7 +24,119 @@ class PobController extends Controller
 {
     public function index()
     {
-        return view('pob.index');
+        $business_unit = Organization::pluck('business_unit')->unique()->sort()->values();
+        $records = PobRecords::select('date')->get();
+        $years = [];
+        $weeks = [];
+        foreach ($records as $record) {
+            if ($record->date) {
+                $date = \Carbon\Carbon::parse($record->date);
+                $years[] = $date->year;
+                $weeks[] = $date->format('W'); // ISO-8601 week number (01-53)
+            }
+        }
+        $years = collect($years)->unique()->sortDesc()->values();
+        $weeks = collect($weeks)->unique()->sort()->values();
+        return view('pob.index', compact('business_unit', 'years', 'weeks'));
+    }
+
+    public function PobHboAveData(Request $request)
+    {
+        $businessUnit = $request->input('business_unit', null);
+        $year = (int) $request->input('year', now()->year);
+        $week = (int) $request->input('week', now()->format('W'));
+
+        // Convert year + week to start and end dates
+        $dateFrom = \Carbon\Carbon::now()->setISODate($year, $week)->startOfWeek();
+        $dateTo = \Carbon\Carbon::now()->setISODate($year, $week)->endOfWeek();
+
+        $pob = $this->getAveragePob($businessUnit, $dateFrom, $dateTo);
+        $hbo = $this->getTotalHbo($businessUnit, $dateFrom, $dateTo);
+
+        return response()->json([
+            'POB' => $pob,
+            'HBO' => $hbo,
+        ]);
+    }
+
+    public function PobHboWeeklyData(Request $request)
+    {
+        $businessUnit = $request->input('business_unit', null);
+        $year = (int) $request->input('year', now()->year);
+        $week = (int) $request->input('week', now()->format('W'));
+
+        $dateFrom = Carbon::now()->setISODate($year, $week)->startOfWeek(); // Monday
+        $dateTo = Carbon::now()->setISODate($year, $week)->endOfWeek(); // Sunday
+
+        // --- POB: Average per day ---
+        $pobRecords = PobRecords::query()
+            ->when($businessUnit, fn($q) => $q->where('business_unit', $businessUnit))
+            ->whereBetween('date', [$dateFrom->format('Y-m-d'), $dateTo->format('Y-m-d')])
+            ->get();
+
+        $dailyPobTotals = [];
+        $dailyPobCounts = [];
+
+        foreach ($pobRecords as $record) {
+            $dateKey = Carbon::parse($record->date)->format('Y-m-d');
+            $data = is_array($record->attendance_data) ? $record->attendance_data : json_decode($record->attendance_data, true);
+            $total = collect($data)->sum();
+
+            $dailyPobTotals[$dateKey] = ($dailyPobTotals[$dateKey] ?? 0) + $total;
+            $dailyPobCounts[$dateKey] = ($dailyPobCounts[$dateKey] ?? 0) + 1;
+        }
+
+        $pobData = [];
+        $sumPob = 0;
+        $daysCount = 0;
+
+        for ($date = $dateFrom->copy(); $date->lte($dateTo); $date->addDay()) {
+            $key = $date->format('Y-m-d');
+            $avg = ($dailyPobTotals[$key] ?? 0) / ($dailyPobCounts[$key] ?? 1);
+            $pobData[] = [
+                'date' => $key,
+                'average' => round($avg, 2),
+            ];
+            $sumPob += $avg;
+            $daysCount++;
+        }
+
+        $pobTotalAve = $daysCount ? round($sumPob / $daysCount, 2) : 0;
+
+        // --- HBO: Total per day ---
+        $hboRecords = HboList::query()
+            ->when($businessUnit, fn($q) => $q->where('business_unit', $businessUnit))
+            ->whereBetween('date_raised', [$dateFrom->format('Y-m-d'), $dateTo->format('Y-m-d')])
+            ->get();
+
+        $dailyHboTotals = [];
+
+        foreach ($hboRecords as $record) {
+            $key = Carbon::parse($record->date_raised)->format('Y-m-d');
+            $dailyHboTotals[$key] = ($dailyHboTotals[$key] ?? 0) + 1;
+        }
+
+        $hboData = [];
+        $weeklyHboTotal = 0;
+
+        for ($date = $dateFrom->copy(); $date->lte($dateTo); $date->addDay()) {
+            $key = $date->format('Y-m-d');
+            $total = $dailyHboTotals[$key] ?? 0;
+            $hboData[] = [
+                'date' => $key,
+                'total' => $total,
+            ];
+            $weeklyHboTotal += $total;
+        }
+
+        $hboTotalCount = $weeklyHboTotal;
+
+        return response()->json([
+            'POB' => $pobData,
+            'HBO' => $hboData,
+            'POB_average' => $pobTotalAve,
+            'HBO_total' => $hboTotalCount,
+        ]);
     }
 
     public function list(Request $request)
@@ -173,30 +285,6 @@ class PobController extends Controller
         }
     }
 
-    public function getChartData(Request $request)
-    {
-        $businessUnit = $request->input('business_unit', null);
-        $year = (int) $request->input('year', now()->year);
-        $week = (int) $request->input('week', now()->format('W'));
-
-        // Convert year + week to start and end dates
-        $dateFrom = \Carbon\Carbon::now()->setISODate($year, $week)->startOfWeek(); // Monday
-        $dateTo = \Carbon\Carbon::now()->setISODate($year, $week)->endOfWeek(); // Sunday
-
-        $pob = $this->getAveragePob($businessUnit, $dateFrom, $dateTo);
-        $hbo = $this->getTotalHbo($businessUnit, $dateFrom, $dateTo);
-
-        return response()->json([
-            'POB' => $pob,
-            'HBO' => $hbo,
-            'business_unit' => $businessUnit,
-            'year' => $year,
-            'week' => $week,
-            'date_from' => $dateFrom->format('Y-m-d'),
-            'date_to' => $dateTo->format('Y-m-d'),
-        ]);
-    }
-
     public function getAveragePob($businessUnit, $dateFrom, $dateTo)
     {
         $query = PobRecords::query()->whereDate('date', '>=', $dateFrom)->whereDate('date', '<=', $dateTo);
@@ -214,14 +302,14 @@ class PobController extends Controller
             $data = is_array($record->attendance_data) ? $record->attendance_data : json_decode($record->attendance_data, true);
 
             foreach ($data as $company => $value) {
-                $totals[$company] = ($totals[$company] ?? 0) + $value;
+                $totals[$company] = ($totals[$company] ?? 0) + (int) $value;
                 $counts[$company] = ($counts[$company] ?? 0) + 1;
             }
         }
 
         $averages = [];
         foreach ($totals as $company => $totalValue) {
-            $averages[$company] = $totalValue / $counts[$company];
+            $averages[$company] = ceil($totalValue / $counts[$company]); // round up, remove decimals
         }
 
         return $averages;
@@ -246,121 +334,6 @@ class PobController extends Controller
 
         return $totals; // this now returns the sum of HBO per company
     }
-
-    public function getChartData2(Request $request)
-    {
-        $businessUnit = $request->input('business_unit', null);
-        $year = (int) $request->input('year', now()->year);
-        $week = (int) $request->input('week', now()->format('W'));
-
-        // Start and end of the week
-        $dateFrom = Carbon::now()->setISODate($year, $week)->startOfWeek(); // Monday
-        $dateTo = Carbon::now()->setISODate($year, $week)->endOfWeek(); // Sunday
-
-        $pob = $this->getPobAvgPerDay($businessUnit, $dateFrom, $dateTo);
-        $hbo = $this->getHboSumPerDay($businessUnit, $dateFrom, $dateTo);
-
-        return response()->json([
-            'business_unit' => $businessUnit ?: 'All Business Units',
-            'week_range' => $dateFrom->format('Y-m-d') . ' to ' . $dateTo->format('Y-m-d'),
-            'POB' => $pob,
-            'HBO' => $hbo,
-            'year' => $year,
-            'week' => $week,
-        ]);
-    }
-
-    /**
-     * Break POB per day and include weekly average at the end
-     */
-    public function getPobAvgPerDay($businessUnit, $dateFrom, $dateTo)
-    {
-        $query = PobRecords::query()->whereDate('date', '>=', $dateFrom)->whereDate('date', '<=', $dateTo);
-
-        if ($businessUnit) {
-            $query->where('business_unit', $businessUnit);
-        }
-
-        $records = $query->get();
-
-        $dailyTotals = [];
-        $dailyCounts = [];
-
-        foreach ($records as $record) {
-            $dateKey = Carbon::parse($record->date)->format('Y-m-d');
-            $data = is_array($record->attendance_data) ? $record->attendance_data : json_decode($record->attendance_data, true);
-            $total = collect($data)->sum();
-
-            $dailyTotals[$dateKey] = ($dailyTotals[$dateKey] ?? 0) + $total;
-            $dailyCounts[$dateKey] = ($dailyCounts[$dateKey] ?? 0) + 1;
-        }
-
-        $dailyAvg = [];
-        $sumTotal = 0;
-        $dayCount = 0;
-
-        // Fill days even if no records
-        for ($date = $dateFrom->copy(); $date->lte($dateTo); $date->addDay()) {
-            $key = $date->format('Y-m-d');
-            $avg = isset($dailyTotals[$key]) ? $dailyTotals[$key] / $dailyCounts[$key] : 0;
-            $dailyAvg[] = [
-                'date' => $key,
-                'average' => round($avg, 2),
-            ];
-            $sumTotal += $avg;
-            $dayCount++;
-        }
-
-        // Add weekly average
-        $dailyAvg[] = [
-            'date' => 'Ave POB / Total HBO',
-            'average' => $dayCount > 0 ? round($sumTotal / $dayCount, 2) : 0,
-        ];
-
-        return $dailyAvg;
-    }
-
-    /**
-     * Break HBO per day
-     */
-    public function getHboSumPerDay($businessUnit, $dateFrom, $dateTo)
-    {
-        $query = HboList::query()->whereDate('date_raised', '>=', $dateFrom)->whereDate('date_raised', '<=', $dateTo);
-
-        if ($businessUnit) {
-            $query->where('business_unit', $businessUnit);
-        }
-
-        $records = $query->get();
-
-        $dailyTotals = [];
-
-        foreach ($records as $record) {
-            $dateKey = Carbon::parse($record->date_raised)->format('Y-m-d');
-            $dailyTotals[$dateKey] = ($dailyTotals[$dateKey] ?? 0) + 1;
-        }
-
-        $dailySum = [];
-
-        for ($date = $dateFrom->copy(); $date->lte($dateTo); $date->addDay()) {
-            $key = $date->format('Y-m-d');
-            $dailySum[] = [
-                'date' => $key,
-                'total' => $dailyTotals[$key] ?? 0,
-            ];
-        }
-
-        // Add weekly total
-        $weeklyTotal = collect($dailySum)->sum('total');
-        $dailySum[] = [
-            'date' => 'Weekly Total',
-            'total' => $weeklyTotal,
-        ];
-
-        return $dailySum;
-    }
-
-    ///////////////////////////
 
     public function business_unit()
     {

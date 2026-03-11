@@ -1,92 +1,72 @@
 <x-layout>
-    <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-5">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between px-6 py-4">
+    <x-card class="mb-2">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <h2 class="text-lg font-medium text-gray-800">POB Records</h2>
-            <!-- Button Row (Right) -->
             <div class="flex gap-2 mt-4 sm:mt-0">
-                <a href="javascript:void(0);" onclick="window.history.back();"
-                    class="bg-blue-500 text-white text-xs px-3 py-2 rounded hover:bg-blue-600">
-                    Back
-                </a>
-                <a href="{{ route('hbo.index') }}"
-                    class="bg-blue-500 text-white text-xs px-3 py-2 rounded hover:bg-blue-600">
+                <x-button size="sm" href="{{ route('hbo.index') }}" variant="info">
                     Home
-                </a>
+                </x-button>
             </div>
         </div>
-    </div>
+    </x-card>
 
-    <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-3 border border-gray-100">
-        <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 px-6 py-3">
-            <h1 class="text-lg font-semibold text-gray-800 whitespace-nowrap self-center">Filter</h1>
+    <x-card class="relative mb-2"> <!-- add relative here -->
+        <form id="pob-filter-form">
+            <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+                <h1 class="text-lg font-semibold text-gray-800 whitespace-nowrap self-center">Filter</h1>
 
-            <div class="flex flex-wrap items-end gap-4">
+                <div class="flex flex-wrap items-end gap-4">
+                    @php
+                        $superAdmin = Auth::user()->credentials == 'SUPER_ADMIN';
+                    @endphp
+                    <x-select label="Business Unit" name="business_unit" size="sm"
+                        value="{{ Auth::user()->business_unit }}" :readonly="!$superAdmin" :options="$business_unit->mapWithKeys(fn($bu) => [$bu => $bu])->toArray()" />
 
-                <!-- Business Unit -->
-                <div class="flex flex-col">
-                    <label class="text-xs font-medium text-gray-500 mb-1">Business Unit</label>
-                    <select name="business_unit" id="business_unit"
-                        class="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 min-w-[150px]"
-                        {{ Auth::user()->credentials != 'SUPER_ADMIN' ? 'disabled' : '' }}>
-                        <!-- Options will be dynamically inserted -->
-                    </select>
-                    @if (Auth::user()->credentials != 'SUPER_ADMIN')
-                        <input type="hidden" name="business_unit" value="{{ Auth::user()->business_unit }}">
-                    @endif
-                </div>
+                    <x-select label="Year" name="year" size="sm" :options="$years->mapWithKeys(fn($year) => [$year => $year])->toArray()" />
 
-                <!-- Year -->
-                <div class="flex flex-col">
-                    <label class="text-xs font-medium text-gray-500 mb-1">Year</label>
-                    <select name="year" id="year"
-                        class="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 min-w-[120px]">
-                        <!-- Options will be dynamically inserted -->
-                    </select>
-                </div>
+                    <x-select label="Work Week" name="week" size="sm" :options="$weeks->mapWithKeys(fn($week) => [$week => $week])->toArray()" :value="now()->format('W')" />
 
-                <!-- Work Week -->
-                <div class="flex flex-col">
-                    <label class="text-xs font-medium text-gray-500 mb-1">Week</label>
-                    <select name="week" id="week"
-                        class="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 min-w-[100px]">
-                        <!-- Options will be dynamically inserted -->
-                    </select>
-                </div>
-
-                <!-- Filter Button -->
-                <div class="flex flex-col justify-end">
-                    <button id="filter-btn" name="filter-btn"
-                        class="bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-5 py-2 rounded-md shadow-sm transition whitespace-nowrap">
-                        Apply Filter
-                    </button>
+                    <div class="flex flex-col justify-end">
+                        <x-button id="btn_filter">Apply Filter</x-button>
+                    </div>
                 </div>
             </div>
+        </form>
+
+        <div id="filterLoading" class="absolute inset-0 bg-white/70 flex items-center justify-center z-50 hidden">
+            <svg class="animate-spin h-8 w-8 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none"
+                viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                </circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+            </svg>
         </div>
-    </div>
+    </x-card>
 
 
-    <div class="col-span-3 row-span-3 mb-5">
-        <div
-            class="h-full col-span-1 bg-white rounded-lg shadow-md border p-6 hover:shadow-lg transition-shadow duration-200">
+    <div class="h-[1200px] grid grid-cols-3 grid-rows-7 gap-2">
+        <x-card class="col-span-3 row-span-4">
             <div class="flex h-full items-center justify-between">
                 <div class="flex-1 h-full">
-                    <div id="hbo-vs-pob-chart" class="w-full min-h-[500px]"></div>
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                        POB Ave vs HBO Count for Work Week
+                    </p>
+                    <div id="hbo-vs-pob" class="w-full h-full"></div>
                 </div>
             </div>
-        </div>
-    </div>
+        </x-card>
 
-    <div class="col-span-3 row-span-3 mb-5">
-        <div
-            class="h-full col-span-1 bg-white rounded-lg shadow-md border p-6 hover:shadow-lg transition-shadow duration-200">
+        <x-card class="col-span-3 row-span-3">
             <div class="flex h-full items-center justify-between">
                 <div class="flex-1 h-full">
-                    <div id="hbo-vs-pob-weekly-chart" class="w-full min-h-[500px]"></div>
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                        POB vs HBO Weekly Report
+                    </p>
+                    <div id="hbo-vs-pob-weekly" class="w-full h-full"></div>
                 </div>
             </div>
-        </div>
+        </x-card>
     </div>
-
 
     <!-- Delete Confirmation Modal -->
     <div id="delete-modal"
@@ -116,155 +96,82 @@
         </div>
     </div>
 
-
-    @vite('resources/js/chart.js')
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const businessUnitSelect = document.getElementById('business_unit');
-            const yearSelect = document.getElementById('year');
-            const weekSelect = document.getElementById('week');
+        const FILTER_STORAGE_KEY = 'pob_filter_data';
 
-            // ✅ Get filter values
-            function getFilters() {
-                return {
-                    business_unit: businessUnitSelect.value,
-                    year: yearSelect.value,
-                    week: weekSelect.value
-                };
-            }
+        $(document).ready(function() {
+            const savedFilters = localStorage.getItem(FILTER_STORAGE_KEY);
+            if (savedFilters) {
+                const filters = JSON.parse(savedFilters);
 
-            // ✅ Load main chart
-            function loadChartData(filters) {
-                const params = new URLSearchParams({
-                    business_unit: filters.business_unit,
-                    year: filters.year,
-                    week: filters.week
-                });
-
-                fetch(`{{ route('pob.chart-data') }}?${params.toString()}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        if (window.updateHboVsPobChart) {
-                            window.updateHboVsPobChart(data);
-                        }
-                    })
-                    .catch(err => console.error('Error fetching chart data:', err));
-            }
-
-            // ✅ Load secondary chart
-            function loadChartData2(filters) {
-                const params = new URLSearchParams({
-                    business_unit: filters.business_unit,
-                    year: filters.year,
-                    week: filters.week
-                });
-
-                fetch(`{{ route('pob.chart-data2') }}?${params.toString()}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        if (window.updateHboVsPobWeeklyChart) {
-                            window.updateHboVsPobWeeklyChart(data);
-                        }
-                    })
-                    .catch(err => console.error('Error fetching weekly chart data:', err));
-            }
-
-            // ✅ Populate business units
-            function loadBusinessUnits(callback) {
-                fetch('{{ route('pob.business_unit') }}')
-                    .then(res => res.json())
-                    .then(data => {
-                        businessUnitSelect.innerHTML = '';
-                        if (!Array.isArray(data) || data.length === 0) {
-                            const option = document.createElement('option');
-                            option.value = '';
-                            option.textContent = 'No data';
-                            option.selected = true;
-                            option.disabled = true;
-                            businessUnitSelect.appendChild(option);
-                        } else {
-                            data.forEach((bu, index) => {
-                                const option = document.createElement('option');
-                                option.value = bu;
-                                option.textContent = bu;
-
-                                // Preselect logic
-                                if ("{{ request('business_unit') }}" && bu ===
-                                    "{{ request('business_unit') }}") {
-                                    option.selected = true;
-                                } else if ("{{ Auth::user()->credentials }}" !== 'SUPER_ADMIN' && bu ===
-                                    "{{ Auth::user()->business_unit }}") {
-                                    option.selected = true;
-                                } else if (index === 0 && !businessUnitSelect.value) {
-                                    option.selected = true;
-                                }
-
-                                businessUnitSelect.appendChild(option);
-                            });
-                        }
-
-                        if (callback) callback(); // call next step after loading BU
-                    })
-                    .catch(err => console.error('Error fetching business units:', err));
-            }
-
-            // ✅ Populate years and weeks
-            function loadYearsAndWeeks(callback) {
-                fetch('{{ route('pob.getYearWeek') }}')
-                    .then(res => res.json())
-                    .then(data => {
-                        // Years
-                        yearSelect.innerHTML = '';
-                        if (data.years && data.years.length > 0) {
-                            data.years.forEach(y => {
-                                const option = document.createElement('option');
-                                option.value = y;
-                                option.textContent = y;
-                                if ("{{ request('year', now()->year) }}" == y) option.selected = true;
-                                yearSelect.appendChild(option);
-                            });
-                        }
-
-                        // Weeks
-                        weekSelect.innerHTML = '';
-                        if (data.weeks && data.weeks.length > 0) {
-                            data.weeks.forEach(w => {
-                                const option = document.createElement('option');
-                                option.value = w;
-                                option.textContent = w;
-                                if ("{{ request('week', now()->format('W')) }}" == w) option.selected =
-                                    true;
-                                weekSelect.appendChild(option);
-                            });
-                        }
-
-                        if (callback) callback(); // call next step after loading year/week
-                    })
-                    .catch(err => console.error('Error fetching years and weeks:', err));
-            }
-
-            // ✅ Load all filters and charts on page load
-            function initialize() {
-                loadBusinessUnits(() => {
-                    loadYearsAndWeeks(() => {
-                        const filters = getFilters();
-                        loadChartData(filters);
-                        loadChartData2(filters);
-                    });
+                Object.keys(filters).forEach(name => {
+                    $(`[name="${name}"]`).val(filters[name]);
                 });
             }
 
-            // ✅ Filter button
-            document.getElementById('filter-btn').addEventListener('click', (e) => {
-                e.preventDefault();
-                const filters = getFilters();
-                loadChartData(filters);
-                loadChartData2(filters);
-            });
-
-            // ✅ Initialize page
-            initialize();
+            let filters = {
+                business_unit: $('#business_unit').val(),
+                year: $('#year').val(),
+                week: $('#week').val(),
+            };
+            fetchAveDataCount(filters);
+            fetchPobHboWeeklyData(filters);
         });
+    </script>
+
+    <script>
+        $('#btn_filter').on('click', function() {
+            const formData = {};
+            $('#pob-filter-form').serializeArray().forEach(field => {
+                formData[field.name] = field.value;
+            });
+            localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(formData));
+            fetchAveDataCount(formData);
+            fetchPobHboWeeklyData(formData);
+        });
+    </script>
+
+    <script>
+        function fetchAveDataCount(filters = {}) {
+            const $loading = $('#filterLoading');
+            $loading.removeClass('hidden');
+            $.ajax({
+                url: "{{ route('pob.getAveDataCount') }}",
+                method: 'GET',
+                data: filters,
+                dataType: 'json',
+                success: function(response) {
+                    window.renderPobVsHboChart(response);
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX error:', error);
+                },
+                complete: function() {
+                    $loading.addClass('hidden');
+                }
+            });
+        }
+
+        function fetchPobHboWeeklyData(filters = {}) {
+            const $loading = $('#filterLoading'); // same loading indicator
+            $loading.removeClass('hidden');
+
+            $.ajax({
+                url: "{{ route('pob.getWeeklyData') }}",
+                method: 'GET',
+                data: filters,
+                dataType: 'json',
+                success: function(response) {
+                    window.renderPobVsHboWeeklyChart(response); // call the weekly chart renderer
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX error:', error);
+                },
+                complete: function() {
+                    $loading.addClass('hidden');
+                }
+            });
+        }
     </script>
 
 </x-layout>

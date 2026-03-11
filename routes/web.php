@@ -51,15 +51,17 @@ Route::prefix('hbo')->name('hbo.')->controller(HboListController::class)->group(
 Route::resource('pob', PobController::class)
     ->except(['show'])
     ->middleware('auth');
-Route::controller(PobController::class)->group(function () {
-    Route::get('/pob/data', 'getPobRecords')->name('pob.data');
-    Route::get('/pob/list', 'list')->name('pob.list');
-    Route::get('/pob/chartdata', 'getChartData')->name('pob.chart-data');
-    Route::get('/pob/chartdata2', 'getChartData2')->name('pob.chart-data2');
-    Route::get('/pob/business_unit', 'business_unit')->name('pob.business_unit');
-    Route::get('/pob/template', 'downloadTemplate')->name('pob.downloadTemplate');
-    Route::post('/pob/upload', 'upload')->name('pob.upload');
-    Route::get('/pob/getYearWeek', 'availableYearsAndWeeks')->name('pob.getYearWeek');
+
+Route::prefix('pob')->name('pob.')->controller(PobController::class)->group(function () {
+    Route::get('/data', 'getPobRecords')->name('data');
+    Route::get('/list', 'list')->name('list');
+    Route::get('/business_unit', 'business_unit')->name('business_unit');
+    Route::get('/template', 'downloadTemplate')->name('downloadTemplate');
+    Route::post('/upload', 'upload')->name('upload');
+    Route::get('/getYearWeek', 'availableYearsAndWeeks')->name('getYearWeek');
+    
+    Route::get('/getAveDataCount', 'PobHboAveData')->name('getAveDataCount');
+    Route::get('/getWeeklyData', 'PobHboWeeklyData')->name('getWeeklyData');
 });
 
 // Organization Routes
