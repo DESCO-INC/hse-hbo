@@ -47,6 +47,10 @@ class MaintenanceController extends Controller
             'password' => ['required', Password::min(5), 'confirmed'],
         ]);
 
+        // Convert only business_unit and credentials to uppercase
+        $attributes['business_unit'] = strtoupper($attributes['business_unit']);
+        $attributes['credentials'] = strtoupper($attributes['credentials']);
+
         // Hash password before saving
         $attributes['password'] = bcrypt($attributes['password']);
 
@@ -65,6 +69,10 @@ class MaintenanceController extends Controller
             'credentials' => ['required'],
             'password' => ['nullable', Password::min(5), 'confirmed'], // optional
         ]);
+
+        // Convert only business_unit and credentials to uppercase
+        $attributes['business_unit'] = strtoupper($attributes['business_unit']);
+        $attributes['credentials'] = strtoupper($attributes['credentials']);
 
         if (!empty($attributes['password'])) {
             $attributes['password'] = bcrypt($attributes['password']);
@@ -115,7 +123,12 @@ class MaintenanceController extends Controller
             'company_name' => ['required', 'string'],
         ]);
 
-        // Map validated fields to table columns
+        // Convert all fields to uppercase
+        $attributes = array_map(function ($value) {
+            return strtoupper($value);
+        }, $attributes);
+
+        // Create organization record
         $org = Organization::create([
             'business_unit' => $attributes['business_unit'],
             'company_name' => $attributes['company_name'],
@@ -126,11 +139,18 @@ class MaintenanceController extends Controller
 
     public function update_org(Request $request, Organization $org)
     {
+        // Validate request
         $attributes = $request->validate([
             'business_unit' => ['required', 'string'],
             'company_name' => ['required', 'string'],
         ]);
 
+        // Convert all fields to uppercase
+        $attributes = array_map(function ($value) {
+            return strtoupper($value);
+        }, $attributes);
+
+        // Update organization record
         $org->update([
             'business_unit' => $attributes['business_unit'],
             'company_name' => $attributes['company_name'],

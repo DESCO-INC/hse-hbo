@@ -22,7 +22,7 @@
             @method('PUT')
 
             <!-- Business Unit -->
-            <div class="relative col-span-2">
+            <div class="relative col-span-3">
                 @php
                     $superAdmin = Auth::user()->credentials == 'SUPER_ADMIN';
                 @endphp
