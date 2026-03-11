@@ -238,26 +238,29 @@
         const FILTER_STORAGE_KEY = 'hbo_filter_data';
 
         $(document).ready(function() {
-
             const savedFilters = localStorage.getItem(FILTER_STORAGE_KEY);
+
             if (savedFilters) {
                 const filters = JSON.parse(savedFilters);
 
+                // Restore all filter inputs except form_type
                 Object.keys(filters).forEach(name => {
-                    $(`[name="${name}"]`).val(filters[name]);
-                });
-            }
-
-            const selectedBU = $('#business_unit').val();
-            if (selectedBU) {
-                loadGroups(selectedBU);
-
-                // restore company AFTER groups load
-                if (savedFilters) {
-                    const filters = JSON.parse(savedFilters);
-                    if (filters.company) {
-                        $('select[name="company"]').val(filters.company);
+                    if (name !== 'form_type' && name !== 'company' && name !== 'business_unit') {
+                        $(`[name="${name}"]`).val(filters[name]);
                     }
+                });
+
+                if (filters['business_unit']) {
+                    // Pass selectedCompany directly
+                    loadGroups(filters['business_unit'], filters['company']);
+                    $('select[name="business_unit"]').val(filters['business_unit']);
+                }
+
+                // Ensure hidden form_type is correct
+                $('#hbo-filter-form').find('input[name="form_type"]').val('filter');
+                const urlParams = new URLSearchParams(window.location.search);
+                if (!urlParams.has('form_type')) {
+                    $('#hbo-filter-form').submit();
                 }
             }
         });
@@ -315,7 +318,7 @@
             $('#' + modalId).toggleClass('hidden');
         }
 
-        function loadGroups(selectedBU) {
+        function loadGroups(selectedBU, selectedCompany = null) {
             const companyNames = $organizationData
                 .filter(org => org.business_unit === selectedBU)
                 .map(org => org.company_name);
@@ -327,7 +330,8 @@
             $companySelect.append('<option value="">All Group</option>');
 
             uniqueCompanyNames.forEach(name => {
-                $companySelect.append(`<option value="${name}">${name}</option>`);
+                const isSelected = selectedCompany && selectedCompany === name ? 'selected' : '';
+                $companySelect.append(`<option value="${name}" ${isSelected}>${name}</option>`);
             });
         }
     </script>
