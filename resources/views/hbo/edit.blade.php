@@ -39,30 +39,30 @@
                 <div class="relative col-span-2">
                     <x-select label="Business Unit" name="business_unit" size="lg" width="full" :value="$superAdmin ? $hbo->business_unit : Auth::user()->business_unit"
                         :readonly="!$superAdmin" :options="['' => 'Select Business Unit'] +
-                            array_combine($data['Business_unit'], $data['Business_unit'])" />
+                            array_combine($data['Business_unit'], $data['Business_unit'])" required/>
                 </div>
 
                 <!-- Company -->
                 <div class="relative col-span-2">
-                    <x-select label="Group" name="company" size="lg" width="full" :options="['' => 'Select Group']" />
+                    <x-select label="Group" name="company" size="lg" width="full" :options="['' => 'Select Group']" required/>
                 </div>
 
                 <!-- Type -->
                 <div class="col-span-2">
                     <x-select label="Type" name="type" size="lg" width="full" :options="['' => 'Select Type'] + array_combine($data['Types'], $data['Types'])"
-                        value="{{ $hbo->type }}" />
+                        value="{{ $hbo->type }}" required/>
                 </div>
 
                 <!-- Category -->
                 <div class="col-span-2">
                     <x-select label="Category" name="category" size="lg" width="full" :options="['' => 'Select Category'] + array_combine($data['Categories'], $data['Categories'])"
-                        value="{{ $hbo->category }}" />
+                        value="{{ $hbo->category }}" required/>
                 </div>
 
                 <!-- Sub Category -->
                 <div class="col-span-2">
                     <x-select label="Sub Category" name="sub_category" size="lg" width="full"
-                        :options="['' => 'Select Sub Category']" />
+                        :options="['' => 'Select Sub Category']" required/>
                 </div>
 
                 <!-- Dates -->
@@ -80,33 +80,33 @@
                 <!-- SWA -->
                 <div class="col-span-2">
                     <x-select label="SWA" name="SWA" size="lg" width="full" :options="['' => 'Select SWA'] + array_combine($data['SWA'], $data['SWA'])"
-                        value="{{ $hbo->SWA }}" />
+                        value="{{ $hbo->SWA }}" required/>
                 </div>
 
                 <!-- SRO -->
                 <div class="col-span-2">
                     <x-select label="SRO" name="SRO" size="lg" width="full" :options="['' => 'Select SRO'] + array_combine($data['SRO'], $data['SRO'])"
-                        value="{{ $hbo->SRO }}" />
+                        value="{{ $hbo->SRO }}" required/>
                 </div>
 
                 <!-- Reporter Info -->
                 <div class="col-span-2">
                     <x-input label="Reported By" size="lg" width="full" name="reported_by"
-                        value="{{ $hbo->reported_by }}" />
+                        value="{{ $hbo->reported_by }}" required/>
                 </div>
 
                 <div class="col-span-2">
                     <x-select label="Reported To" name="reported_to" size="lg" width="full" :options="['' => 'Select User'] + array_combine($data['Users'], $data['Users'])"
-                        value="{!! $hbo->reported_to !!}" />
+                        value="{!! $hbo->reported_to !!}" required/>
                 </div>
 
                 <!-- Description -->
                 <div class="md:col-span-2">
-                    <x-textarea label="Hazard Description" name="hazard_description" value="{!! $hbo->hazard_description !!}" />
+                    <x-textarea label="Hazard Description" name="hazard_description" value="{!! $hbo->hazard_description !!}" required/>
                 </div>
 
                 <div class="md:col-span-2">
-                    <x-textarea label="Recommendation" name="recommendation" value="{!! $hbo->recommendation !!}" />
+                    <x-textarea label="Recommendation" name="recommendation" value="{!! $hbo->recommendation !!}" required/>
                 </div>
 
                 <div class="md:col-span-4 relative">
