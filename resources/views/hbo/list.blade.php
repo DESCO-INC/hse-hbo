@@ -4,7 +4,7 @@
             <h2 class="text-lg font-medium text-gray-800">HBO Lists</h2>
 
             <div class="flex gap-2 mt-4 sm:mt-0">
-                <x-button size="sm"  size="sm" href="{{ url('/hbo/create') }}">
+                <x-button size="sm" size="sm" href="{{ url('/hbo/create') }}">
                     Add Item
                 </x-button>
 
@@ -76,7 +76,8 @@
     <div class="bg-white rounded-lg shadow-sm overflow-hidden">
         <div class="px-6 py-5 overflow-x-auto">
             <!-- Search -->
-            <form method="GET" class="mb-4 flex items-center gap-2">
+            <form id="search-form" method="GET" action="{{ url()->current() }}" method="GET"
+                class="mb-4 flex items-center gap-2">
                 <input type="hidden" name="form_type" value="search">
 
                 <input name="search" id="search" type="text"
@@ -302,7 +303,9 @@
         $('#btn_filter').on('click', function() {
             const formData = {};
             $('#hbo-filter-form').serializeArray().forEach(field => {
-                formData[field.name] = field.value;
+                if (field.name !== 'form_type') { // <-- exclude form_type
+                    formData[field.name] = field.value;
+                }
             });
             localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(formData));
             $('#hbo-filter-form').submit();
