@@ -45,7 +45,7 @@ class HboListController extends Controller
 
         $onGoing = (clone $query)->where('status', 'ONGOING')->count();
         $forVerification = (clone $query)->where('status', 'FOR VERIFICATION')->count();
-        $close = (clone $query)->where('status', 'CLOSED')->count();
+        $close = (clone $query)->where('status', 'CLOSE')->count();
 
         return response()->json([
             'success' => true,
@@ -78,7 +78,9 @@ class HboListController extends Controller
     public function hboDataByCategory(Request $request)
     {
         $categoriesRaw = json_decode(file_get_contents(resource_path('json/categories.json')), true);
+
         $query = HboList::query();
+
         if ($request->filled('business_unit')) {
             $query->where('business_unit', $request->business_unit);
         }
@@ -90,16 +92,23 @@ class HboListController extends Controller
         if ($request->filled('date_from') && $request->filled('date_to')) {
             $query->whereBetween('date_raised', [$request->date_from, $request->date_to]);
         }
+
         $data = $query
-            ->selectRaw('category, COUNT(*) as total')
+            ->selectRaw('COALESCE(category, "Uncategorized") as category, COUNT(*) as total')
             ->groupBy('category')
-            ->orderBy('total', 'desc')
+            ->orderByDesc('total')
             ->get()
             ->map(function ($item) use ($categoriesRaw) {
-                // Assign the color from JSON
+                // fallback if category doesn't exist in JSON
                 $item->color = $categoriesRaw[$item->category]['color'] ?? '#000000';
-                return $item;
-            });
+
+                return [
+                    'category' => $item->category,
+                    'total' => (int) $item->total,
+                    'color' => $item->color,
+                ];
+            })
+            ->values();
 
         return response()->json($data);
     }

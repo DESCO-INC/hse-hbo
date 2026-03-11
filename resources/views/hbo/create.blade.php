@@ -27,28 +27,28 @@
             <div class="relative col-span-2">
                 <x-select label="Business Unit" name="business_unit" size="lg" width="full"
                     :value="$superAdmin ? '' : Auth::user()->business_unit" :readonly="!$superAdmin" :options="['' => 'Select Business Unit'] +
-                        array_combine($data['Business_unit'], $data['Business_unit'])" />
+                        array_combine($data['Business_unit'], $data['Business_unit'])" required/>
             </div>
 
             <!-- Company -->
             <div class="relative col-span-2">
-                <x-select label="Group" name="company" size="lg" width="full" :options="['' => 'Select Group']" />
+                <x-select label="Group" name="company" size="lg" width="full" :options="['' => 'Select Group']" required/>
             </div>
 
             <!-- Type -->
             <div class="col-span-2">
-                <x-select label="Type" name="type" size="lg" width="full" :options="['' => 'Select Type'] + array_combine($data['Types'], $data['Types'])" />
+                <x-select label="Type" name="type" size="lg" width="full" :options="['' => 'Select Type'] + array_combine($data['Types'], $data['Types'])" required/>
             </div>
 
             <!-- Category -->
             <div class="col-span-2">
-                <x-select label="Category" name="category" size="lg" width="full" :options="['' => 'Select Category'] + array_combine($data['Categories'], $data['Categories'])" />
+                <x-select label="Category" name="category" size="lg" width="full" :options="['' => 'Select Category'] + array_combine($data['Categories'], $data['Categories'])" required/>
             </div>
 
             <!-- Sub Category -->
             <div class="col-span-2">
                 <x-select label="Sub Category" name="sub_category" size="lg" width="full"
-                    :options="['' => 'Select Sub Category']" />
+                    :options="['' => 'Select Sub Category']" required/>
             </div>
 
             <!-- Dates -->
@@ -64,32 +64,32 @@
 
             <!-- SWA -->
             <div class="col-span-2">
-                <x-select label="SWA" name="SWA" size="lg" width="full" :options="['' => 'Select SWA'] + array_combine($data['SWA'], $data['SWA'])" />
+                <x-select label="SWA" name="SWA" size="lg" width="full" :options="['' => 'Select SWA'] + array_combine($data['SWA'], $data['SWA'])" required/>
             </div>
 
             <!-- SRO -->
             <div class="col-span-2">
-                <x-select label="SRO" name="SRO" size="lg" width="full" :options="['' => 'Select SRO'] + array_combine($data['SRO'], $data['SRO'])" />
+                <x-select label="SRO" name="SRO" size="lg" width="full" :options="['' => 'Select SRO'] + array_combine($data['SRO'], $data['SRO'])" required/>
             </div>
 
             <!-- Reporter Info -->
             <div class="col-span-2">
                 <x-input label="Reported By" size="lg" width="full" name="reported_by"
-                    value="{{ Auth::user()->name ?? '' }}" />
+                    value="{{ Auth::user()->name ?? '' }}" required/>
             </div>
 
             <div class="col-span-2">
                 <x-select label="Reported To" name="reported_to" size="lg" width="full"
-                    :options="['' => 'Select User'] + array_combine($data['Users'], $data['Users'])" />
+                    :options="['' => 'Select User'] + array_combine($data['Users'], $data['Users'])" required/>
             </div>
 
             <!-- Description -->
             <div class="md:col-span-2">
-                <x-textarea label="Hazard Description" name="hazard_description" />
+                <x-textarea label="Hazard Description" name="hazard_description" required/>
             </div>
 
             <div class="md:col-span-2">
-                <x-textarea label="Recommendation" name="recommendation" />
+                <x-textarea label="Recommendation" name="recommendation" required/>
             </div>
 
             <div class="md:col-span-4">
