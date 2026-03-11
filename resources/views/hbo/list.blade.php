@@ -239,6 +239,18 @@
 
         $(document).ready(function() {
             const savedFilters = localStorage.getItem(FILTER_STORAGE_KEY);
+            const selectedBU = $('#business_unit').val();
+            if (selectedBU) {
+                loadGroups(selectedBU);
+
+                // restore company AFTER groups load
+                if (savedFilters) {
+                    const filters = JSON.parse(savedFilters);
+                    if (filters.company) {
+                        $('select[name="company"]').val(filters.company);
+                    }
+                }
+            }
 
             if (savedFilters) {
                 const filters = JSON.parse(savedFilters);
