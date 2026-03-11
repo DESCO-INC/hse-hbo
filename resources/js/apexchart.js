@@ -583,6 +583,7 @@ window.renderWeeklySummaryChart = function (data) {
     const options = {
         chart: {
             type: 'line',
+            zoom: { enabled: false, type: 'none' },
             height: '95%',
             toolbar: {
                 show: true,
