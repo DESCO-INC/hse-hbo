@@ -13,8 +13,6 @@
             </div>
         </div>
     </x-card>
-
-
     <form id="formHazard_update" method="POST" action="{{ route('hbo.update', $hbo->id) }}"
         class="grid grid-cols-1 md:grid-cols-3 md:grid-rows-2 gap-6 transition-all duration-300">
         @csrf
@@ -39,7 +37,7 @@
                     $superAdmin = Auth::user()->credentials == 'SUPER_ADMIN';
                 @endphp
                 <div class="relative col-span-2">
-                    <x-select label="Business Unit" name="business_unit" size="lg" width="full" :value="$superAdmin ? '' : Auth::user()->business_unit"
+                    <x-select label="Business Unit" name="business_unit" size="lg" width="full" :value="$superAdmin ? $hbo->business_unit : Auth::user()->business_unit"
                         :readonly="!$superAdmin" :options="['' => 'Select Business Unit'] +
                             array_combine($data['Business_unit'], $data['Business_unit'])" />
                 </div>
@@ -99,20 +97,19 @@
 
                 <div class="col-span-2">
                     <x-select label="Reported To" name="reported_to" size="lg" width="full" :options="['' => 'Select User'] + array_combine($data['Users'], $data['Users'])"
-                        value="{{ $hbo->reported_to }}" />
+                        value="{!! $hbo->reported_to !!}" />
                 </div>
 
                 <!-- Description -->
                 <div class="md:col-span-2">
-                    <x-textarea label="Hazard Description" name="hazard_description"
-                        value="{{ $hbo->hazard_description }}" />
+                    <x-textarea label="Hazard Description" name="hazard_description" value="{!! $hbo->hazard_description !!}" />
                 </div>
 
                 <div class="md:col-span-2">
-                    <x-textarea label="Recommendation" name="recommendation" value="{{ $hbo->recommendation }}" />
+                    <x-textarea label="Recommendation" name="recommendation" value="{!! $hbo->recommendation !!}" />
                 </div>
 
-                <div class="md:col-span-4">
+                <div class="md:col-span-4 relative">
                     @php
                         $photos = $hbo->hbo_photo;
 
@@ -123,9 +120,11 @@
 
                         $photoValue = is_array($photos) ? implode(', ', $photos) : $photos;
                     @endphp
-                    <x-input
-                        label="Picture (Paste the link of the Photo use , comma symbol as seperator for multiple photo)"
-                        size="lg" width="full" name="hbo_photo" value="{{ $photoValue ?? '' }}" />
+
+                    <!-- Input with label -->
+                    <x-input label="Picture (Paste the link of the Photo, use comma as separator for multiple)"
+                        size="lg" width="full" name="hbo_photo" id="hbo_photo_input"
+                        value="{!! $photoValue ?? '' !!}" />
                 </div>
             </fieldset>
             <!-- Buttons -->
@@ -174,10 +173,10 @@
             <h2 class="text-lg font-semibold text-gray-800 mb-3">Action Taken</h2>
             <fieldset id="actionForm" class="" disabled>
                 <div class="mb-2">
-                    <x-input label="Action Date" name="action_date" type="date" :value="$hbo->action_date"/>
+                    <x-input label="Action Date" name="action_date" type="date" :value="$hbo->action_date" />
                 </div>
                 <div class="mb-2">
-                    <x-input label="Action By" name="action_by" :value="$hbo->action_by"/>
+                    <x-input label="Action By" name="action_by" :value="$hbo->action_by" />
                 </div>
                 <div class="mb-2">
                     <x-textarea label="Action Taken" name="action_remarks" value="{{ $hbo->action_remarks }}" />
@@ -190,10 +189,10 @@
             <h2 class="text-lg font-semibold text-gray-800 mb-3">Verification</h2>
             <fieldset id="verifyForm" class="" disabled>
                 <div class="mb-2">
-                    <x-input label="Verified Date" type="date" name="verified_date" :value="$hbo->verified_date"/>
+                    <x-input label="Verified Date" type="date" name="verified_date" :value="$hbo->verified_date" />
                 </div>
                 <div class="mb-2">
-                    <x-input label="Verified By" name="verified_by" :value="$hbo->verified_by"/>
+                    <x-input label="Verified By" name="verified_by" :value="$hbo->verified_by" />
                 </div>
                 <div class="mb-2">
                     <x-textarea label="Verification Remarks" name="verified_remarks"

@@ -127,7 +127,17 @@ class HboListController extends Controller
         if ($request->filled('date_from') && $request->filled('date_to')) {
             $query->whereBetween('date_raised', [$request->date_from, $request->date_to]);
         }
-        $data = $query->selectRaw('company, COUNT(*) as total')->groupBy('company')->orderBy('total', 'desc')->get();
+        $data = $query
+            ->selectRaw('COALESCE(company, "Uncategorized") as company, COUNT(*) as total')
+            ->groupBy('company')
+            ->orderByDesc('total')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'company' => $item->company,
+                    'total' => (int) $item->total,
+                ];
+            });
 
         return response()->json($data);
     }
@@ -166,8 +176,9 @@ class HboListController extends Controller
         if ($request->filled('date_from') && $request->filled('date_to')) {
             $query->whereBetween('date_raised', [$request->date_from, $request->date_to]);
         }
+
         $data = $query
-            ->selectRaw('sub_category, category, COUNT(*) as total')
+            ->selectRaw('COALESCE(sub_category, "Uncategorized") as sub_category, category, COUNT(*) as total')
             ->groupBy('sub_category', 'category')
             ->orderBy('total', 'desc')
             ->get()
@@ -761,16 +772,13 @@ class HboListController extends Controller
             'verified_remarks' => 'nullable|string|max:1000',
         ]);
 
-        // ✅ Convert comma-separated string to JSON array for photos
+        // ✅ Convert comma-separated string to array for photos
         if (!empty($validated['hbo_photo'])) {
             $validated['hbo_photo'] = array_map('trim', explode(',', $validated['hbo_photo']));
         }
 
-        // ✅ Update all validated fields on the model
-        foreach ($validated as $key => $value) {
-            $hbo->$key = $value;
-        }
-        $hbo->save();
+        // ✅ Force update using Eloquent update() method
+        $hbo->update($validated);
 
         return redirect()->route('hbo.edit', $hbo->id)->with('success', 'HBO information and Action updated successfully.');
     }
