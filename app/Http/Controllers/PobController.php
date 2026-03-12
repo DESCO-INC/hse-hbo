@@ -209,53 +209,6 @@ class PobController extends Controller
         }
     }
 
-    public function getPobRecords(Request $request)
-    {
-        $businessUnit = $request->input('business_unit', null);
-        $dateFrom = $request->input('date_from', now()->startOfYear()->format('Y-m-d'));
-        $dateTo = $request->input('date_to', now()->format('Y-m-d'));
-
-        $perPage = 5; // Force 5 per page
-
-        $query = PobRecords::query();
-
-        // Filter by date (ignore time part)
-        $query->whereBetween(\DB::raw('DATE(date)'), [$dateFrom, $dateTo]);
-
-        // Only filter by business unit if provided
-        if (!empty($businessUnit)) {
-            $query->where('business_unit', $businessUnit);
-        }
-
-        // Paginate
-        $records = $query->orderBy('date', 'desc')->paginate($perPage);
-
-        // Transform records for frontend
-        $data = $records->map(function ($record) {
-            $attendance = $record->attendance_data ?? [];
-            $total = array_sum($attendance);
-
-            return [
-                'id' => $record->id,
-                'date' => $record->date->format('Y-m-d'),
-                'business_unit' => $record->business_unit,
-                'total' => $total,
-                'attendance_data' => $attendance,
-            ];
-        });
-
-        // Return JSON response with pagination
-        return response()->json([
-            'data' => $data,
-            'pagination' => [
-                'current_page' => $records->currentPage(),
-                'last_page' => $records->lastPage(),
-                'per_page' => $records->perPage(),
-                'total' => $records->total(),
-            ],
-        ]);
-    }
-
     public function store(Request $request)
     {
         try {
@@ -333,37 +286,6 @@ class PobController extends Controller
         }
 
         return $totals; // this now returns the sum of HBO per company
-    }
-
-    public function business_unit()
-    {
-        $business_units = PobRecords::select('business_unit')->distinct()->pluck('business_unit');
-
-        return response()->json($business_units);
-    }
-
-    public function availableYearsAndWeeks()
-    {
-        $records = PobRecords::select('date')->get();
-
-        $years = [];
-        $weeks = [];
-
-        foreach ($records as $record) {
-            if ($record->date) {
-                $date = \Carbon\Carbon::parse($record->date);
-                $years[] = $date->year;
-                $weeks[] = $date->format('W'); // ISO-8601 week number (01-53)
-            }
-        }
-
-        $years = collect($years)->unique()->sortDesc()->values(); // unique years, latest first
-        $weeks = collect($weeks)->unique()->sort()->values(); // unique weeks sorted ascending
-
-        return response()->json([
-            'years' => $years,
-            'weeks' => $weeks,
-        ]);
     }
 
     public function downloadTemplate(Request $request)
