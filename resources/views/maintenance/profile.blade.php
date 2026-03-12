@@ -1,5 +1,5 @@
 <x-layout>
-    <x-card>
+    <x-card class="mb-2">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <h2 class="text-lg font-medium text-gray-800">PROFILE</h2>
 

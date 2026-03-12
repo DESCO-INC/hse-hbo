@@ -3,20 +3,15 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\SessionController;
-use App\Http\Controllers\RegisterUserController;
 use App\Http\Controllers\HboListController;
 use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\PobController;
-use App\Http\Controllers\OrganizationController;
 
 // Auth
 Route::get('/', [SessionController::class, 'index'])->name('login');
 Route::post('/login', [SessionController::class, 'store']);
 Route::post('/logout', [SessionController::class, 'destroy'])->name('logout');
 
-// Register
-Route::get('/register', [RegisterUserController::class, 'index'])->middleware('auth');
-Route::post('/register', [RegisterUserController::class, 'store'])->middleware('auth');
 
 // HBO Routes
 Route::resource('hbo', HboListController::class)
@@ -25,7 +20,7 @@ Route::resource('hbo', HboListController::class)
 
 Route::prefix('hbo')
     ->name('hbo.')
-    ->controller(HboListController::class)
+    ->controller(HboListController::class)->middleware('auth')
     ->group(function () {
         Route::get('/business_unit', 'business_unit')->name('business_unit');
         Route::get('/business_unit/{business_unit}/companies', 'company')->name('companies');
@@ -53,9 +48,8 @@ Route::resource('pob', PobController::class)
 
 Route::prefix('pob')
     ->name('pob.')
-    ->controller(PobController::class)
+    ->controller(PobController::class)->middleware('auth')
     ->group(function () {
-        Route::get('/data', 'getPobRecords')->name('data');
         Route::get('/list', 'list')->name('list');
         Route::get('/business_unit', 'business_unit')->name('business_unit');
         Route::get('/template', 'downloadTemplate')->name('downloadTemplate');
@@ -71,7 +65,7 @@ Route::prefix('pob')
 
 Route::prefix('maintenance')
     ->name('maintenance.')
-    ->middleware('super_admin')
+    ->middleware(['auth', 'super_admin'])
     ->controller(MaintenanceController::class)
     ->group(function () {
         Route::get('/', 'user')->name('user');
@@ -89,7 +83,7 @@ Route::prefix('maintenance')
 
 // Profile Routes (accessible to logged users)
 Route::prefix('maintenance')
-    ->controller(MaintenanceController::class)
+    ->controller(MaintenanceController::class)->middleware('auth')
     ->group(function () {
         Route::get('/profile', 'profile')->name('maintenance.profile');
         Route::put('/profile', 'profile_update')->name('maintenance.profile_update');
