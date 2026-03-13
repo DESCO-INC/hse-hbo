@@ -38,7 +38,7 @@ class SessionController extends Controller
         request()->session()->regenerate();
 
         //redirect
-        return redirect('/hbo')->with('success', 'Login successful! Welcome 🎉');
+        return redirect()->intended('/hbo')->with('success', 'Login successful! Welcome 🎉');
     }
 
     public function destroy()

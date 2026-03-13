@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
 
 use PhpOffice\PhpSpreadsheet\IOFactory;
@@ -398,26 +399,28 @@ class HboListController extends Controller
             'date_due' => 'required|date|after_or_equal:date_raised',
             'SWA' => 'required',
             'SRO' => 'required',
-            'hbo_photo' => 'nullable', // if uploading multiple photos
+            'hbo_photo' => 'nullable',
             'reported_by' => 'required',
             'reported_to' => 'required',
             'hazard_description' => 'required',
             'recommendation' => 'required',
         ]);
 
-        // Convert hbo_photo to JSON if not null
         if (!empty($data['hbo_photo'])) {
             $data['hbo_photo'] = json_encode($data['hbo_photo']);
         }
 
-        \App\Models\HboList::create(
+        $hbo = HboList::create(
             array_merge($data, [
                 'status' => 'ONGOING',
                 'created_by' => Auth::user()->name,
             ]),
         );
 
-        return redirect()->route('hbo.list')->with('success', 'Hazard record created successfully.');
+        // Call separate method to send email notifications
+        $this->sendHboNotification($hbo);
+
+        return redirect()->route('hbo.list')->with('success', 'Hazard record created successfully and notifications sent.');
     }
 
     public function edit(HboList $hbo)
@@ -766,5 +769,34 @@ class HboListController extends Controller
         return response()->streamDownload(function () use ($writer) {
             $writer->save('php://output');
         }, $fileName);
+    }
+
+    protected function sendHboNotification(HboList $hbo)
+    {
+        $recipients = User::where('business_unit', $hbo->business_unit)
+            ->where('credentials', '!=', 'STAFF') // exclude STAFF
+            ->get();
+        $url = route('hbo.edit', ['hbo' => $hbo->id], true);
+
+        foreach ($recipients as $user) {
+            Mail::send(
+                'email.template',
+                [
+                    'recipientName' => $user->name,
+                    'reportedBy' => $hbo->reported_by,
+                    'businessUnit' => $hbo->business_unit,
+                    'group' => $hbo->company,
+                    'type' => $hbo->type,
+                    'category' => $hbo->category,
+                    'dateRaised' => $hbo->date_raised,
+                    'dateDue' => $hbo->date_due,
+                    'status' => $hbo->status,
+                    'url' => $url, // pass to Blade
+                ],
+                function ($message) use ($user) {
+                    $message->to($user->email)->subject('New HBO Item has been added');
+                },
+            );
+        }
     }
 }
