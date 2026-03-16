@@ -56,7 +56,7 @@
                 <!-- Category -->
                 <div class="col-span-2">
                     <x-select label="Category" name="category" size="lg" width="full" :options="['' => 'Select Category'] + array_combine($data['Categories'], $data['Categories'])"
-                        value="{{ $hbo->category }}" required/>
+                        :value="$hbo->category" required/>
                 </div>
 
                 <!-- Sub Category -->
@@ -326,6 +326,8 @@
             }
 
             const selectedCat = $('#category').val();
+            console.log("{{ $hbo->category }}");
+            console.log(selectedCat);
             if (selectedCat) {
                 loadSubcategories(selectedCat, DataSubcategory);
             }
