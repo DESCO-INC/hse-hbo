@@ -318,7 +318,7 @@
 
     <script>
         const DataCompany = "{{ $hbo->company ?? '' }}";
-        const DataSubcategory = "{{ $hbo->sub_category ?? '' }}";
+        const DataSubcategory = @json($hbo->sub_category ?? '');
         $(document).ready(function() {
             const selectedBU = $('#business_unit').val();
             if (selectedBU) {
@@ -326,7 +326,6 @@
             }
 
             const selectedCat = $('#category').val();
-            console.log("{{ $hbo->category }}");
             console.log(selectedCat);
             if (selectedCat) {
                 loadSubcategories(selectedCat, DataSubcategory);
