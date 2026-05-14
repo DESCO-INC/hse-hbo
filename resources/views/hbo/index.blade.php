@@ -189,6 +189,39 @@
         </x-card>
     </div>
 
+    @if (Auth::user()->id == '6')
+        {{-- Ads Modal 1 --}}
+        <div id="ads-modal-1"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+
+            <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl p-6 relative">
+
+                <button class="absolute top-2 right-2 text-gray-500 hover:text-black" onclick="closeFirstModal()">
+                    ✕
+                </button>
+
+                <img src="{{ asset('images/kwatogs1.jpg') }}" class="w-full rounded-lg object-cover">
+
+            </div>
+        </div>
+
+        {{-- Ads Modal 2 (hidden initially) --}}
+        <div id="ads-modal-2"
+            class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+
+            <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 relative">
+
+                <button class="absolute top-2 right-2 text-gray-500 hover:text-black"
+                    onclick="document.getElementById('ads-modal-2').style.display='none'">
+                    ✕
+                </button>
+
+                <img src="{{ asset('images/kwatogs2.jpg') }}" class="w-full rounded-lg object-cover">
+
+            </div>
+        </div>
+    @endif
+
     <script>
         const $organizationData = @json($organization);
         const FILTER_STORAGE_KEY = 'hbo_filter_data';
@@ -541,6 +574,17 @@
                     $loading.addClass('hidden');
                 }
             });
+        }
+    </script>
+
+    {{-- delete this after prank --}}
+    <script>
+        function closeFirstModal() {
+            // hide modal 1
+            document.getElementById('ads-modal-1').style.display = 'none';
+
+            // show modal 2
+            document.getElementById('ads-modal-2').classList.remove('hidden');
         }
     </script>
 </x-layout>
